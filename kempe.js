@@ -29,7 +29,7 @@ function kempeStart() {
                 [500,0],
                 [0,500]];
 
-    tick();
+    // tick();
 }
 
 var lastTime = 0;
