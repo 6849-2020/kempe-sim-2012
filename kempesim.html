@@ -3,6 +3,7 @@
 <title>Kempe Simulation</title>
 <script type="text/javascript" src="cas.js"></script>
 <script type="text/javascript" src="kempe.js"></script>
+<script type="text/javascript" src="../temp.js"></script>
 <script type="text/javascript" src="webgl-utils.js"></script>
 <script type="text/javascript" src="colors.min.js"></script>
 
@@ -13,6 +14,11 @@
         <tr>
             <td>
                 <canvas id="graphics-canvas" style="border: none;" width="500" height="500" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="checkbox" id="checkboxeditMode" onchange="updateEditMode();" />Edit Mode
             </td>
         </tr>
         <tr>
