@@ -1,7 +1,7 @@
 //FIX FIND LINE, REFLECT
  
  function createParent(a,b,l){
-    var points = [[0,0,true],[8,4,false],[4,8,false],[12,12,false]];
+    var points = [[0,0,true],[8,4,false],[4,8,false],[11,11,false]];
     var l = 4*Math.sqrt(5);
     var edges = [[0,1,l],[0,2,l],[1,3,l],[2,3,l]];
     return[points,edges];
@@ -34,17 +34,22 @@ function createLinkage(parent, params){
   //Multiplicator terms, returns additional points,edges to be attached to parent
   var p_edge_length = parent[1][0][2];
   var mul_one = createMLinkage(params[1],parent[0][0],parent[0][1],p_edge_length);
-  //var mul_two = createMLinkage(params[2],parent[0][0],parent[0][2],p_edge_length);
+  var mul_two = createMLinkage(params[2],parent[0][0],parent[0][2],p_edge_length);
+
+  // var additor = createALinkage(parent[0][0], mul_one[0][mul_one[0].length-1], mul_two[0][mul_two[0].length-1], params[3], params[0]);
+  var additor = createALinkage(parent[0][0], normalize(parent[0][1]), normalize(parent[0][2]), params[3], params[0]);
   //Additor terms
   //Scale by c
   //return linkage
-  return mul_one;
+  return additor;
 }
 
 /*
 INPUT: The angle to be multiplied, the number of times to be multiplied n, the points of the parent edge to which all other edges are attached,the length of the parent edge.
 
 RETURNS: list of additional points, and edges to be added to the linkage
+
+last point is the resulting multiplied point, scaled to length 1.0
 */
 
 function createMLinkage(n,p1,p2,l){
@@ -89,6 +94,14 @@ function createMLinkage(n,p1,p2,l){
     //edges[edges.length - 3][2] = 30;
     //alert(JSON.stringify(edges));
     //return [pts,[[0,1,unit_l],[0,2,unit_l],edges[edges.length-3]]];
+
+    var lastpoint = pts[pts.length-2];
+    var ll = Math.sqrt((lastpoint[0]-p1[0])*(lastpoint[0]-p1[0])+(lastpoint[1]-p1[1])*(lastpoint[1]-p1[1]));
+    lastpoint = [(lastpoint[0]-p1[0])/ll+p1[0], (lastpoint[1]-p1[1])/ll+p1[1]];
+    pts.push(lastpoint);
+    edges.push([0, pts.length-1]);
+    edges.push([pts.length-3,pts.length-1]);
+
     return [pts,edges];
 }
 
@@ -116,6 +129,84 @@ function mulContraPara(p1,p2,l){
     return [np1,np2];
 }
 
+function createALinkage(root, p1, p2, angle, length)
+{
+    var mp = [p1[0]+p2[0], p1[1]+p2[1]];
+    var mplen = Math.sqrt(mp[0]*mp[0]+mp[1]*mp[1]);
+    mp = [mp[0]/mplen, mp[1]/mplen, false];
+
+    var pts = [
+                [root[0], root[1], true],
+                [p1[0], p1[1], false],
+                [p2[0], p2[1], false]
+                ];
+    var edges = [
+                    [0, 1],
+                    [0, 2],
+                ];
+
+    var np1 = [p1[0]*2.0, p1[1]*2.0, false];
+    var np2 = [p2[0]/2.0, p2[1]/2.0, false];
+    pts.push(np1);
+    pts.push(np2);
+    edges.push([0,3]);
+    edges.push([1,3]);
+    edges.push([0,4]);
+    edges.push([2,4]);
+
+    pts.push(mp);
+    edges.push([0,5]);
+
+    var np3 = [np1[0]+mp[0], np1[1]+mp[1], false];
+    np3 = reflect(np3[0], np3[1], mp[0], mp[1], np1[0], np1[1]);
+    np3.push(false);
+    pts.push(np3);
+    edges.push([3,6]);
+    edges.push([5,6]);
+
+    var np4 = [(np3[0]-mp[0])*0.25+mp[0],(np3[1]-mp[1])*0.25+mp[1], false];
+    pts.push(np4);
+    edges.push([5,7]);
+    edges.push([6,7]);
+    edges.push([4,7]);
+
+    pts.push([2,0, true]);
+    var p9 = reflect(mp[0]+2, mp[1], mp[0], mp[1], 2, 0);
+    p9.push(false);
+    pts.push(p9);
+    edges.push([0,8]); // optional
+    edges.push([8,9]);
+    edges.push([5,9]);
+
+    pts.push([(p9[0]-mp[0])*0.25+mp[0], (p9[1]-mp[1])*0.25+mp[1], false]);
+    edges.push([9,10]);
+    edges.push([5,10]);
+
+    var p11 = reflect(pts[10][0]-pts[5][0], pts[10][1]-pts[5][1], 0, 0, pts[10][0], pts[10][1]);
+    p11.push(false);
+    pts.push(p11);
+    edges.push([0,11]);
+    edges.push([10,11]);
+
+    var p12 = [p11[0]*Math.cos(angle)-p11[1]*Math.sin(angle), p11[0]*Math.sin(angle)+p11[1]*Math.cos(angle), false];
+    pts.push(p12);
+    edges.push([0,12]);
+    edges.push([11,12]);
+
+    var p12len = Math.sqrt(p12[0]*p12[0]+p12[1]*p12[1]);
+    pts.push([p12[0]/p12len*length, p12[1]/p12len*length, false]);
+    edges.push([0,13]);
+    edges.push([12,13]);
+
+    console.log(pts);
+    return [pts, edges];
+}
+
+function normalize(p)
+{
+    var pl = Math.sqrt(p[0]*p[0] + p[1]*p[1]);
+    return [p[0]/pl, p[1]/pl];
+}
 
 function reflect(ax, ay, x1, y1, x2, y2)
 {

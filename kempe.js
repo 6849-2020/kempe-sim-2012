@@ -53,6 +53,10 @@ function kempeStart() {
     cvs.addEventListener('mouseout', handleMouseOut);
     cvs.addEventListener('click', handleMouseClick);
 
+    cvs.width = document.width;
+    cvs.height = document.height;
+    recalcViewDimentions();
+
 
 
     cvs.onselectstart = function () { return false; } // ie
@@ -64,7 +68,13 @@ function kempeStart() {
     tick();
 }
 
-function initProcessLines() {
+function recalcViewDimentions()
+{
+    VIEW_WIDTH = cvs.width;
+    VIEW_HEIGHT = cvs.height;
+}
+
+function initProcessLinesAndPoints() {
     for (var i=0; i<data[1].length; i++)
     {
         if (data[1][i][0] == data[1][i][1])
@@ -81,12 +91,24 @@ function initProcessLines() {
     for (var k in lines)
     {
         var s = k.split(" ");
-        data[1].push([parseInt(s[0]), parseInt(s[1])]);
+        var p1 = parseInt(s[0]);
+        var p2 = parseInt(s[1]);
+        var x = data[0][p1][0]-data[0][p2][0];
+        var y = data[0][p1][1]-data[0][p2][1];
+        data[1].push([p1, p2, Math.sqrt(x*x+y*y)]);
     }
 
     for (var i=0; i<data[1].length; i++)
     {
         lines[data[1][i][0]+" "+data[1][i][1]] = i;
+    }
+
+    for (var i=0; i<data[0].length; i++)
+    {
+        for (var j=data[0][i].length; j<5; j++)
+            data[0][i].push(0);
+        if (data[0][i][2] === 0)
+            data[0][i][2] = false;
     }
 }
 
@@ -197,16 +219,17 @@ function init() {
     // data = createAdditor(1, 2, 2, 1);
     parent = createParent(1,1,1);
     //document.write(JSON.stringify(parent));
-    params = [1,10,0,0];
-    mul = createMLinkage(params[1], parent[0][0],parent[0][1],parent[1][0][2]);
+    params = [5.4,1,0,Math.PI/4];
+    mul = createLinkage(parent, params);
     data = mul;
-    data[0].push([0,0]);
+    // data[0].push([0,0]);
     data[0].push([8,4]);
     data[0].push([4,8]);
     data[0].push([12,12]);
+    data[1].push([0, data[0].length-3]);
 
 
-    initProcessLines();
+    initProcessLinesAndPoints();
 }
 
 
@@ -296,6 +319,11 @@ function draw() {
 
 function update() {
     handleKeys();
+    if (!edit_mode)
+    {
+        var forces = evalForces(data);
+        timeStep(data, forces, 0.1);
+    }
 }
 
 function handleMouseClick(e) {
