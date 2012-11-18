@@ -53,10 +53,8 @@ function createMLinkage(n,p1,p2,l){
 
     //Anchor contra-parallelogram
     var m_1 = [2.0*l,0.0,true];
-    var line = findLine(p2,m_1);
     var n_1 = reflect(p2[0]+2.0*l, p2[1], p2[0], p2[1], 2.0*l, 0.0);
     n_1.push(false);
-    // var n_1 = reflectPoint(line[0],line[1],[p2[0]+2.0*l,p2[1],false]);
 
     pts = pts.concat([p1,m_1,p2,n_1]);
 
@@ -112,28 +110,13 @@ function mulContraPara(p1,p2,l){
     //Locate other anchor point
     var nx1 = nx2 - x1;
     var ny1 = ny2 - y1;
-    // var np1 = [nx1,ny1,false];
-    var line = findLine([0,0,true],np2);
-    // np1 = reflectPoint(line[0],line[1],np1);
-    //p1 = [0,0,true], p2 = np2, p3 = np1 where p1 and p2 make the line
+
     var np1 = reflect(nx1, ny1, 0, 0, nx2, ny2);
     np1.push(false);
     return [np1,np2];
 }
 
-function findLine(p1,p2){
-    var m = (p1[1]-p2[1])/(p1[0]-p2[0]);
-    var b = p1[1] - m*p1[0];
-    return [m,b];
-}
-function reflectPoint(m,b,point){
-    var x = point[0];
-    var y = point[1];
-    var d = (x + (y - b)*m)/(1 + m*m);
-    var x_f = 2*d - x;
-    var y_f = 2*d*m -y + 2*b;
-    return [x_f,y_f,point[2]];
-}
+
 function reflect(ax, ay, x1, y1, x2, y2)
 {
     var ans = perpendicular(ax, ay, x1, y1, x2, y2);
@@ -149,13 +132,16 @@ function perpendicular(ax, ay, x1, y1, x2, y2)
     var q = ((ax-x1)*dx+(ay-y1)*dy)/dd;
     return [x1+q*dx, y1+q*dy];
 }
+
 function bracePara(angle,n,p1,p2){
 }
 
 function braceContraPara(angle,n,p1,p2){
 }
+
 function midPoint(angle,n,p1,p2){
 }
+
 // $(document).ready(function(){
 //     parent = createParent(1,1,1);
 //     //document.write(JSON.stringify(parent));
