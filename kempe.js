@@ -13,7 +13,7 @@ var TILE_WIDTH = 50;
 var map = {};
 var view = {};
 var VIEW_WIDTH = 500;
-var VIEW_HEIGHT = 450;
+var VIEW_HEIGHT = 500;
 var VIEW_TILE_WIDTH = VIEW_WIDTH/TILE_WIDTH;
 var VIEW_TILE_HEIGHT = VIEW_HEIGHT/TILE_WIDTH;
 var VIEW_TILE_WIDTH_HALF = (VIEW_TILE_WIDTH/2)>>0;
@@ -194,7 +194,17 @@ function init() {
     line_start = false;
     line_end = [0,0];
 
-    data = createAdditor(1, 2, 2, 1);
+    // data = createAdditor(1, 2, 2, 1);
+    parent = createParent(1,1,1);
+    //document.write(JSON.stringify(parent));
+    params = [1,10,0,0];
+    mul = createMLinkage(params[1], parent[0][0],parent[0][1],parent[1][0][2]);
+    data = mul;
+    data[0].push([0,0]);
+    data[0].push([8,4]);
+    data[0].push([4,8]);
+    data[0].push([12,12]);
+
 
     initProcessLines();
 }
@@ -374,7 +384,7 @@ function handleMouseWheel(e) {
         if (e.wheelDelta)
         {
             var w = e.wheelDelta/120;
-            console.log(w);
+            // console.log(w);
             if (w>0)
             {
                 for (var i=0; i<w; i++)
@@ -400,7 +410,7 @@ function handleMouseWheel(e) {
         if (e.wheelDelta)
         {
             var w = e.wheelDelta/120;
-            console.log(w);
+            // console.log(w);
             if (w>0)
             {
                 for (var i=0; i<w; i++)
