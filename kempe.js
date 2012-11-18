@@ -53,8 +53,7 @@ function kempeStart() {
     cvs.addEventListener('mouseout', handleMouseOut);
     cvs.addEventListener('click', handleMouseClick);
 
-    cvs.width = document.width;
-    cvs.height = document.height;
+    
     recalcViewDimentions();
 
 
@@ -68,13 +67,20 @@ function kempeStart() {
     tick();
 }
 
+var last_doc_width;
+var last_doc_length;
 function recalcViewDimentions()
 {
+    cvs.width = window.innerWidth;
+    cvs.height = window.innerHeight ;
     VIEW_WIDTH = cvs.width;
     VIEW_HEIGHT = cvs.height;
+    last_doc_width = window.innerWidth;
+    last_doc_length = window.innerHeight;
 }
 
 function initProcessLinesAndPoints() {
+    lines = {};
     for (var i=0; i<data[1].length; i++)
     {
         if (data[1][i][0] == data[1][i][1])
@@ -219,14 +225,14 @@ function init() {
     // data = createAdditor(1, 2, 2, 1);
     parent = createParent(1,1,1);
     //document.write(JSON.stringify(parent));
-    params = [5.4,1,0,Math.PI/4];
+    params = [1.4,1,0,Math.PI/4];
     mul = createLinkage(parent, params);
     data = mul;
     // data[0].push([0,0]);
-    data[0].push([8,4]);
-    data[0].push([4,8]);
-    data[0].push([12,12]);
-    data[1].push([0, data[0].length-3]);
+    // data[0].push([8,4]);
+    // data[0].push([4,8]);
+    // data[0].push([12,12]);
+    // data[1].push([0, data[0].length-3]);
 
 
     initProcessLinesAndPoints();
@@ -236,6 +242,9 @@ function init() {
 var LINE_BORDER_WIDTH = 4;
 var LINE_WIDTH = 3;
 function draw() {
+    if (window.innerWidth !== last_doc_width)
+        recalcViewDimentions();
+
     ctx.fillStyle = 'white'
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
 
@@ -315,6 +324,12 @@ function draw() {
         ctx.fill();
         ctx.stroke();
     }
+}
+
+function toggleEditMode() {
+    edit_mode = !edit_mode;
+    if (!edit_mode)
+        initProcessLinesAndPoints();
 }
 
 function update() {
@@ -412,7 +427,6 @@ function handleMouseWheel(e) {
         if (e.wheelDelta)
         {
             var w = e.wheelDelta/120;
-            // console.log(w);
             if (w>0)
             {
                 for (var i=0; i<w; i++)
@@ -438,7 +452,6 @@ function handleMouseWheel(e) {
         if (e.wheelDelta)
         {
             var w = e.wheelDelta/120;
-            // console.log(w);
             if (w>0)
             {
                 for (var i=0; i<w; i++)
@@ -460,6 +473,9 @@ function handleMouseWheel(e) {
             }
         }
     }
+    e.returnValue = false;
+    e.preventDefault();
+    return false;
 }
 
 function handleMouseDown(e) {
@@ -474,7 +490,6 @@ function handleMouseDown(e) {
         if (currentKeysDown[16]) {
             var mx = (e.offsetX-cx)/sx;
             var my = (e.offsetY-cy)/sy;
-            console.log(sx+" "+sy+" new line");
             for (var i=0; i<data[0].length; i++)
             {
                 if ((Math.abs(data[0][i][0]-mx) <= RADIUS/2.0/sx) && (Math.abs(data[0][i][1]-my) <= RADIUS/2.0/Math.abs(sy)))
@@ -495,7 +510,6 @@ function handleMouseDown(e) {
         {
             var mx = (e.offsetX-cx)/sx;
             var my = (e.offsetY-cy)/sy;
-            console.log(sx+" "+sy);
             for (var i=0; i<data[0].length; i++)
             {
                 if ((Math.abs(data[0][i][0]-mx) <= RADIUS/2.0/sx) && (Math.abs(data[0][i][1]-my) <= RADIUS/2.0/Math.abs(sy)))
@@ -518,7 +532,6 @@ function handleMouseDown(e) {
     {
         var mx = (e.offsetX-cx)/sx;
         var my = (e.offsetY-cy)/sy;
-        console.log(sx+" "+sy);
         for (var i=0; i<data[0].length; i++)
         {
             if (data[0][i][2])
@@ -620,7 +633,6 @@ function handleMouseUp(e) {
                 var mx = (e.offsetX-cx)/sx;
                 var my = (e.offsetY-cy)/sy;
                 var endi = false;
-                console.log(sx+" "+sy+" making new line");
                 for (var i=0; i<data[0].length; i++)
                 {
                     if (i == line_start-1)
@@ -732,7 +744,8 @@ function handleKeyPress(event) {
 
     // capslock
     else if (event.keyCode == 20) {
-        edit_mode = !edit_mode;
+        // edit_mode = !edit_mode;
+        toggleEditMode();
         checkboxeditMode.checked = edit_mode;
         dragging = false;
         selected = false;
@@ -838,6 +851,8 @@ var checkboxeditMode;
 function updateEditMode() {
     if (!checkboxeditMode) checkboxeditMode = document.getElementById("checkboxeditMode");
     edit_mode = checkboxeditMode.checked;
+    if (!edit_mode)
+        initProcessLinesAndPoints();
 }
 
 
