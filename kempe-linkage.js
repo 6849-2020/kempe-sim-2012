@@ -35,13 +35,72 @@ function createLinkage(parent, params){
   var p_edge_length = parent[1][0][2];
   var mul_one = createMLinkage(params[1],parent[0][0],parent[0][1],p_edge_length);
   var mul_two = createMLinkage(params[2],parent[0][0],parent[0][2],p_edge_length);
+  //document.write(JSON.stringify(mul_one));
+  //document.write(JSON.stringify(mul_two));
 
-  // var additor = createALinkage(parent[0][0], mul_one[0][mul_one[0].length-1], mul_two[0][mul_two[0].length-1], params[3], params[0]);
-  var additor = createALinkage(parent[0][0], normalize(parent[0][1]), normalize(parent[0][2]), params[3], params[0]);
+
+  //Combine mul_one and mul_two, first item in the pts[] of the linkage is the shared root.
+  var mul_two_pts = mul_two[0].slice();
+  mul_two_pts.shift();
+  var shift = mul_one[0].length -1 ;
+  for(var i = 0; i < mul_two[1].length; i++){
+    var newp1 = mul_two[1][i][0];
+    var newp2 = mul_two[1][i][1];
+    if(newp1 != 0){
+        newp1 = shift + newp1;
+    }
+    if(newp2 != 0){
+        newp2 = shift + newp2;
+    }
+    mul_one[1].push([newp1,newp2,mul_two[1][i][2]]);
+  }
+  var combined_pts = mul_one[0].concat(mul_two_pts);
+  var combined_edges = mul_one[1];
+  
+  //Put them through the additor;
+  var additor = createALinkage(combined_pts[0], combined_pts[mul_one[0].length-1], combined_pts[combined_pts.length-1], params[3], params[0]);
+
+  var additor_pts = additor[0].slice();
+  additor_pts.splice(0,3);
+  var shift = combined_pts.length - 3;
+  var p1_pos = mul_one[0].length-1;
+  var p2_pos = combined_pts.length-1
+  for(var i = 0; i < additor[1].length; i++){
+    var newp1 = additor[1][i][0];
+    var newp2 = additor[1][i][1];
+    if(newp1 != 0){
+        if (newp1 == 1){
+            newp1 = p1_pos;
+        }
+        else if(newp1 == 2){
+            newp1 = p2_pos;
+        }
+        else{
+            newp1 = shift + newp1;
+        }
+    }
+    if(newp2 != 0){
+        if (newp2 == 1){
+            newp2 = p1_pos;
+        }
+        else if(newp2 == 2){
+            newp2 = p2_pos;
+        }
+        else{
+            newp2 = shift + newp2;
+        }
+    }
+    combined_edges.push([newp1,newp2,additor[1][i][2]]);
+  }
+  var combined_pts_2 = combined_pts.concat(additor_pts);
+  var combined_edges_2 = combined_edges;
+  //var additor = createALinkage(parent[0][0], normalize(parent[0][1]), normalize(parent[0][2]), params[3], params[0]);
   //Additor terms
   //Scale by c
   //return linkage
-  return additor;
+  //return mul_two;
+  //return additor;
+  return [combined_pts_2,combined_edges_2];
 }
 
 /*
@@ -61,47 +120,55 @@ function createMLinkage(n,p1,p2,l){
     var n_1 = reflect(p2[0]+2.0*l, p2[1], p2[0], p2[1], 2.0*l, 0.0);
     n_1.push(false);
 
-    pts = pts.concat([p1,m_1,p2,n_1]);
+    pts = pts.concat([p1,p2,m_1,n_1]);
 
-    var e_1 = [0,1,2.0*l];
-    var e_2 = [2,3,2.0*l];
-    var e_3 = [1,3,l];
+    var e_0 = [0,1,l];
+    var e_1 = [0,2,2.0*l];
+    var e_2 = [1,3,2.0*l];
+    var e_3 = [2,3,l];
 
-    edges = edges.concat([e_1,e_2,e_3]);
+    edges = edges.concat([e_0,e_1,e_2,e_3]);
 
     //Multiplicative contra-parallelograms;
     var len = pts.length;
     var unit_l = l;
     var newpts;
     var newedges;
-    for(var j = 1; j < n; j++){
-        newpts = mulContraPara(pts[len-2],pts[len-1],unit_l/2.0);
+    if( n > 1 ){
+        newpts = mulContraPara(pts[len-3],pts[len-1],unit_l/2.0);
+        pts = pts.concat(newpts);
+        len = pts.length;
+        e_1 = [len-2,len-1,unit_l];
+        e_2 = [0,len-1,unit_l/2.0];
+        e_3 = [len-2,len-3,unit_l*(3/4.0)]; 
+        e_4 = [len-2,len-5,unit_l*(1/4.0)];
+        newedges = [e_1,e_2,e_3,e_4];
+        edges = edges.concat(newedges);
+        unit_l = unit_l/2.0;   
+    }
+    for(var j = 2; j < n; j++){
+        newpts = mulContraPara(pts[len-1],pts[len-2],unit_l/2.0);
         pts = pts.concat(newpts);
 
-        //after 1 iter pts looks like [p1,m_1,p2,n_1,np_1,np_2]
+        //after 1 iter pts looks like [p1,p2,m_1,n_1,np_1,np_2]
         len = pts.length;
-        e_1 = [len-1,len-2,unit_l];
-        e_2 = [0,len-2,unit_l/2.0];
+        e_1 = [len-2,len-1,unit_l];
+        e_2 = [0,len-1,unit_l/2.0];
 
         //Edges to make sure point anchored on bar
-        e_3 = [len-1,len-3,unit_l*(3/4.0)]; 
-        e_4 = [len-1,len-4,unit_l*(1/4.0)];
+        e_3 = [len-2,len-3,unit_l*(3/4.0)]; 
+        e_4 = [len-2,len-4,unit_l*(1/4.0)];
         newedges = [e_1,e_2,e_3,e_4];
         edges = edges.concat(newedges);
         unit_l = unit_l/2.0;
     }
-    //alert(JSON.stringify(edges));
-    //edges[edges.length - 3][2] = 30;
-    //alert(JSON.stringify(edges));
-    //return [pts,[[0,1,unit_l],[0,2,unit_l],edges[edges.length-3]]];
 
-    var lastpoint = pts[pts.length-2];
+    var lastpoint = pts[pts.length-1];
     var ll = Math.sqrt((lastpoint[0]-p1[0])*(lastpoint[0]-p1[0])+(lastpoint[1]-p1[1])*(lastpoint[1]-p1[1]));
-    lastpoint = [(lastpoint[0]-p1[0])/ll+p1[0], (lastpoint[1]-p1[1])/ll+p1[1]];
+    lastpoint = [(lastpoint[0]-p1[0])/ll+p1[0], (lastpoint[1]-p1[1])/ll+p1[1],false];
     pts.push(lastpoint);
     edges.push([0, pts.length-1]);
-    edges.push([pts.length-3,pts.length-1]);
-
+    edges.push([pts.length-2,pts.length-1]);
     return [pts,edges];
 }
 
@@ -126,14 +193,13 @@ function mulContraPara(p1,p2,l){
 
     var np1 = reflect(nx1, ny1, 0, 0, nx2, ny2);
     np1.push(false);
-    return [np1,np2];
+    return [np2,np1];
 }
 
 function createALinkage(root, p1, p2, angle, length)
 {
     var mp = [p1[0]+p2[0], p1[1]+p2[1]];
-    var mplen = Math.sqrt(mp[0]*mp[0]+mp[1]*mp[1]);
-    mp = [mp[0]/mplen, mp[1]/mplen, false];
+    mp = normalize(mp);
 
     var pts = [
                 [root[0], root[1], true],
@@ -188,15 +254,19 @@ function createALinkage(root, p1, p2, angle, length)
     edges.push([0,11]);
     edges.push([10,11]);
 
-    var p12 = [p11[0]*Math.cos(angle)-p11[1]*Math.sin(angle), p11[0]*Math.sin(angle)+p11[1]*Math.cos(angle), false];
-    pts.push(p12);
-    edges.push([0,12]);
-    edges.push([11,12]);
+    if(angle != 0){
+        var p12 = [p11[0]*Math.cos(angle)-p11[1]*Math.sin(angle), p11[0]*Math.sin(angle)+p11[1]*Math.cos(angle), false];
+        pts.push(p12);
+        edges.push([0,12]);
+        edges.push([11,12]);
+    }
 
-    var p12len = Math.sqrt(p12[0]*p12[0]+p12[1]*p12[1]);
-    pts.push([p12[0]/p12len*length, p12[1]/p12len*length, false]);
-    edges.push([0,13]);
-    edges.push([12,13]);
+    p_last = pts[pts.length-1];
+    var p_lastlen = Math.sqrt(p_last[0]*p_last[0]+p_last[1]*p_last[1]);
+    pts.push([p_last[0]/p_lastlen*length, p_last[1]/p_lastlen*length, false]);
+
+    edges.push([0,pts.length-1]);
+    edges.push([pts.length-2,pts.length-1]);
 
     console.log(pts);
     return [pts, edges];
@@ -211,7 +281,6 @@ function normalize(p)
 function reflect(ax, ay, x1, y1, x2, y2)
 {
     var ans = perpendicular(ax, ay, x1, y1, x2, y2);
-    console.log(ans)
     return [2*ans[0]-ax, 2*ans[1]-ay];
 }
 
@@ -229,10 +298,6 @@ function bracePara(angle,n,p1,p2){
 
 function braceContraPara(angle,n,p1,p2){
 }
-
-function midPoint(angle,n,p1,p2){
-}
-
 // $(document).ready(function(){
 //     parent = createParent(1,1,1);
 //     //document.write(JSON.stringify(parent));

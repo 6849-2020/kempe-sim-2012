@@ -214,8 +214,8 @@ function init() {
     dragging = false;
     hilight = false;
     edit_mode = false;
-    sx = 30;
-    sy = -30;
+    sx = 150;
+    sy = -150;
     cx = VIEW_WIDTH/2;
     cy = VIEW_HEIGHT/2;
     lastpos = [0,0];
@@ -225,7 +225,7 @@ function init() {
     // data = createAdditor(1, 2, 2, 1);
     parent = createParent(1,1,1);
     //document.write(JSON.stringify(parent));
-    params = [1.4,1,0,Math.PI/4];
+    params = [1.4,2,2,Math.PI/4];
     mul = createLinkage(parent, params);
     data = mul;
     // data[0].push([0,0]);
