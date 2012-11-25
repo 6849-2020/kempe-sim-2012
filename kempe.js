@@ -225,7 +225,7 @@ function init() {
     // data = createAdditor(1, 2, 2, 1);
     parent = createParent(1,1,1);
     //document.write(JSON.stringify(parent));
-    terms = [[1.4,1,1,0],[5,0,2,0]];
+    terms = [[1.4,0,2,0],[5,1,0,0],[5,0,0,Math.PI/1.2]];
     mul = createKempeLinkage(1,1,terms);
     data = mul;
     // data[0].push([0,0]);

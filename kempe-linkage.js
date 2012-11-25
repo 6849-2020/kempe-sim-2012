@@ -76,14 +76,14 @@ function createKempeLinkage(a,b,terms){
             else{
                 //alert(JSON.stringify(linkage_pts));
                 var n_pt = findThirdPt(A,B,C);
-                linkage_pts.push([n_pt[0],n_pt[1],true]);
+                linkage_pts.push([n_pt[0],n_pt[1],false]);
                 linkage_edges.push([linkage_pts.length-1,i1,1],[linkage_pts.length-1,i2,1]);
                 A = n_pt;
                 i1 = linkage_pts.length-1;
                 i2 = ts + i-1; 
                 B = C;
                 C = linkage_pts[ts + i-1];
-                alert(JSON.stringify(linkage_pts));
+                //alert(JSON.stringify(linkage_pts));
             }
         }
     }
