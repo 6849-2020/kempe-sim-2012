@@ -6,6 +6,12 @@
     var edges = [[0,1,l],[0,2,l],[1,3,l],[2,3,l]];
     return[points,edges];
  }
+// function createParent2(a,b,l){
+//     var points = [[0,0,true],[8,4,false],[4,8,false],[11,11,false]];
+//     var l = 4*Math.sqrt(5);
+//     var edges = [[0,1,l],[0,2,l],[1,3,l],[2,3,l]];
+//     return[points,edges];
+//  }
 
  /*
  INPUT: Terms in format alpha,beta,[c_1,ma_1,mb_1,d_1],
@@ -14,20 +20,88 @@
  RETURNS: List of linkages for each cosine term 
  */
 function createKempeLinkage(a,b,terms){
-    var linkages = [];
-    var parent = createParent(a,b,l);
-    linkages.push(parent);
-    for (var i = 2; i < terms.length; i++)
-    {
-        linkages.push(createLinkage(parent,terms[i]));
+    var final_term_links = [];
+    //Parent parallelogram p [[p_o,p_a,p_b,p_f],[o_a,o_b,a_f,b_f]
+    var parent = createParent(a,b,1);
+    var linkage_pts = parent[0];
+    var linkage_edges = parent[1].concat([1,3,1][2,3,1]);
+    shift = 0;
+    for (var i = 0; i < terms.length; i++){
+        var linkage_term = createLinkage(parent,terms[i]);
+        linkage_pts = linkage_pts.concat(linkage_term[0]);
+        //alert(JSON.stringify(linkage_term));
+        final_term_links.push(linkage_pts.length-1);
+    
+        var shift_edges = [];
+        for(var j = 0; j < linkage_term[1].length; j++){
+            var newp1 = linkage_term[1][j][0];
+            var newp2 = linkage_term[1][j][1];
+            if (newp1 != 0 && newp1 != 1 && newp1 != 2){
+                newp1 = shift + newp1;
+            }
+            if (newp2 != 0 && newp2 != 1 && newp2 != 2){
+                newp2 = shift + newp2;
+            }
+            shift_edges.push([newp1,newp2,linkage_term[1][i][2]]);
+        }
+        shift = shift + linkage_term[0].length;
+        linkage_edges = linkage_edges.concat(shift_edges);
     }
-    return linkages;
+
+    root = [0,0,true];
+    var ts = linkage_pts.length;
+    pt1 = linkage_pts[final_term_links[0]];
+    pt1_i = final_term_links[0];
+    for( var l = 1; l < final_term_links.length; l++){
+        linkage_pts.push([0,0,false]);
+        //alert(JSON.stringify(linkage_pts));
+    }
+    
+    //alert(JSON.stringify(linkage_pts));
+    for ( var k = 1; k < final_term_links.length; k++){
+        var c_i = final_term_links[k];
+        var c_pt = linkage_pts[c_i];
+        var A = c_pt;
+        var B = root;
+        var C = pt1;
+        var i1 = c_i;
+        var i2 = pt1_i;
+        for( var i = 1; i <= k; i++){
+            if(i == k){
+                //alert(JSON.stringify(linkage_pts));
+                var n_pt = findThirdPt(A,B,C);
+                linkage_pts[k-1+ts] = [n_pt[0],n_pt[1],false];
+                linkage_edges.push([k-1+ts,i1,1],[k-1+ts,i2,1]);
+            }
+            else{
+                //alert(JSON.stringify(linkage_pts));
+                var n_pt = findThirdPt(A,B,C);
+                linkage_pts.push([n_pt[0],n_pt[1],true]);
+                linkage_edges.push([linkage_pts.length-1,i1,1],[linkage_pts.length-1,i2,1]);
+                A = n_pt;
+                i1 = linkage_pts.length-1;
+                i2 = ts + i-1; 
+                B = C;
+                C = linkage_pts[ts + i-1];
+                alert(JSON.stringify(linkage_pts));
+            }
+        }
+    }
+    return [linkage_pts,linkage_edges];
+}
+
+//Used in making translator linkages
+function findThirdPt(pA,pB,pC){
+    dx = pC[0] - pB[0];
+    dy = pC[1] - pB[1];
+    return [pA[0]+dx,pA[1]+dy];
 }
 
 /*
 INPUT: Angles a and b, Parent parallelogram p [[p_o,p_a,p_b,p_f],[o_a,o_b,a_f,b_f]] and  single linkage params [c_1,ma_1,mb_1,d_1]
 
-RETURNS: list representation of the linkage[[p_1,p_2...],[e_1,e_2...]] where p_i is a point in format [x,y,bool], and e_i is of the form [p_s,p_e,length]
+RETURNS: list representation of the linkage[[p_1,p_2...],[e_1,e_2...]] where p_i is a point in format [x,y,bool], and e_i is of the form [p_s,p_e,length] and the indices of
+p1 and p2 of the multiplicators.
 */
 function createLinkage(parent, params){
   var linkage = [];
@@ -35,36 +109,73 @@ function createLinkage(parent, params){
   var p_edge_length = parent[1][0][2];
   var mul_one = createMLinkage(params[1],parent[0][0],parent[0][1],p_edge_length);
   var mul_two = createMLinkage(params[2],parent[0][0],parent[0][2],p_edge_length);
-  //document.write(JSON.stringify(mul_one));
-  //document.write(JSON.stringify(mul_two));
+  // //document.write(JSON.stringify(mul_one));
+  // //document.write(JSON.stringify(mul_two));
 
 
-  //Combine mul_one and mul_two, first item in the pts[] of the linkage is the shared root.
+  //Combine mul_one and mul_two, they share points in the parent
+  //parallelogram [p_0,p_a,p_b,p_f]
+
+  //m1 looks like [p_0,p_a........f_1], remove first two pts,
+  //shift edges not 0,1 by 2 
+  var mul_one_pts = mul_one[0].slice();
+  mul_one_pts.splice(0,2);
+  var mul_one_edges = [];
+  for(var i = 0; i < mul_one[1].length; i++){
+    var newp1 = mul_one[1][i][0];
+    var newp2 = mul_one[1][i][1];
+    if (newp1 != 0 && newp1 != 1){
+        newp1 = 2 + newp1;
+    }
+    if (newp2 != 0 && newp2 != 1){
+        newp2 = 2 + newp2;
+    }
+    mul_one_edges.push([newp1,newp2,mul_one[1][i][2]]);
+  }
+
+  //attach m2 to m1, m2 looks like [p_0,p_b........f_1], remove
+  //first two pts
   var mul_two_pts = mul_two[0].slice();
-  mul_two_pts.shift();
-  var shift = mul_one[0].length -1 ;
+  mul_two_pts.splice(0,2);
+  //modify edges so that any edge with index 1
+  //now points to index 2, shift rest.
+  var shift = mul_one_pts.length + 2;
+  var mul_two_edges = [];
   for(var i = 0; i < mul_two[1].length; i++){
     var newp1 = mul_two[1][i][0];
     var newp2 = mul_two[1][i][1];
-    if(newp1 != 0){
-        newp1 = shift + newp1;
+    if (newp1 != 0){
+        if(newp1 == 1){
+            newp1 = 2;
+        }
+        else{
+            newp1 = newp1 + shift; 
+        }   
     }
-    if(newp2 != 0){
-        newp2 = shift + newp2;
+    if (newp2 != 0){
+        if(newp2 == 1){
+            newp2 = 2;
+        }
+        else{
+            newp2 = newp2 + shift; 
+        }   
     }
-    mul_one[1].push([newp1,newp2,mul_two[1][i][2]]);
+    mul_two_edges.push([newp1,newp2,mul_two[1][i][2]]);
   }
-  var combined_pts = mul_one[0].concat(mul_two_pts);
-  var combined_edges = mul_one[1];
-  
+
   //Put them through the additor;
-  var additor = createALinkage(combined_pts[0], combined_pts[mul_one[0].length-1], combined_pts[combined_pts.length-1], params[3], params[0]);
+  //alert(JSON.stringify(mul_one_pts));
+  var additor = createALinkage(parent[0][0], mul_one_pts[mul_one_pts.length-1], mul_two_pts[mul_two_pts.length-1], params[3], params[0]);
+  //Combine mul pts, edges:
+  var final_pts = mul_one_pts.concat(mul_two_pts);
+  var final_edges = mul_one_edges.concat(mul_two_edges);
+
 
   var additor_pts = additor[0].slice();
   additor_pts.splice(0,3);
-  var shift = combined_pts.length - 3;
-  var p1_pos = mul_one[0].length-1;
-  var p2_pos = combined_pts.length-1
+  var shift = final_pts.length + 1;
+  var p1_pos = mul_one_pts.length + 3;
+  var p2_pos = final_pts.length + 3;
   for(var i = 0; i < additor[1].length; i++){
     var newp1 = additor[1][i][0];
     var newp2 = additor[1][i][1];
@@ -90,31 +201,35 @@ function createLinkage(parent, params){
             newp2 = shift + newp2;
         }
     }
-    combined_edges.push([newp1,newp2,additor[1][i][2]]);
+    final_edges.push([newp1,newp2,additor[1][i][2]]);
   }
-  var combined_pts_2 = combined_pts.concat(additor_pts);
-  var combined_edges_2 = combined_edges;
+  final_pts =  final_pts.concat(additor_pts);
   //var additor = createALinkage(parent[0][0], normalize(parent[0][1]), normalize(parent[0][2]), params[3], params[0]);
   //Additor terms
   //Scale by c
   //return linkage
-  //return mul_two;
+  //return mul_one;
   //return additor;
-  return [combined_pts_2,combined_edges_2];
+  return [final_pts,final_edges];
 }
 
 /*
 INPUT: The angle to be multiplied, the number of times to be multiplied n, the points of the parent edge to which all other edges are attached,the length of the parent edge.
 
 RETURNS: list of additional points, and edges to be added to the linkage
-
 last point is the resulting multiplied point, scaled to length 1.0
+format is like this: [p2,p2,m_1,n_1,bracing for the contra ps....,contrap points]
 */
 
 function createMLinkage(n,p1,p2,l){
     var pts = []
     var edges = []
-
+    if(n == 0){
+        return[[p1,normalize(p2),[1,0,false]],[[0,1,1]]];
+    }
+    if(n == 1){
+        return[[p1,normalize(p2),normalize(p2)],[[0,1,1]]];
+    }
     //Anchor contra-parallelogram
     var m_1 = [2.0*l,0.0,true];
     var n_1 = reflect(p2[0]+2.0*l, p2[1], p2[0], p2[1], 2.0*l, 0.0);
@@ -137,20 +252,23 @@ function createMLinkage(n,p1,p2,l){
     if( n > 1 ){
         newpts = mulContraPara(pts[len-3],pts[len-1],unit_l/2.0);
         pts = pts.concat(newpts);
+
+
         len = pts.length;
         e_1 = [len-2,len-1,unit_l];
         e_2 = [0,len-1,unit_l/2.0];
-        e_3 = [len-2,len-3,unit_l*(3/4.0)]; 
-        e_4 = [len-2,len-5,unit_l*(1/4.0)];
+        e_3 = [len-2,3,unit_l*(3/4.0)]; 
+        e_4 = [len-2,1,unit_l*(1/4.0)];
         newedges = [e_1,e_2,e_3,e_4];
         edges = edges.concat(newedges);
-        unit_l = unit_l/2.0;   
+        unit_l = unit_l/2.0; 
+
     }
     for(var j = 2; j < n; j++){
         newpts = mulContraPara(pts[len-1],pts[len-2],unit_l/2.0);
         pts = pts.concat(newpts);
 
-        //after 1 iter pts looks like [p1,p2,m_1,n_1,np_1,np_2]
+        ////pts looks like [p1,p2,m_1,n_1,np1_2,np1_1]
         len = pts.length;
         e_1 = [len-2,len-1,unit_l];
         e_2 = [0,len-1,unit_l/2.0];
@@ -161,6 +279,7 @@ function createMLinkage(n,p1,p2,l){
         newedges = [e_1,e_2,e_3,e_4];
         edges = edges.concat(newedges);
         unit_l = unit_l/2.0;
+
     }
 
     var lastpoint = pts[pts.length-1];
@@ -202,7 +321,7 @@ function createALinkage(root, p1, p2, angle, length)
     mp = normalize(mp);
 
     var pts = [
-                [root[0], root[1], true],
+                [root[0], root[1], false],
                 [p1[0], p1[1], false],
                 [p2[0], p2[1], false]
                 ];
@@ -220,7 +339,7 @@ function createALinkage(root, p1, p2, angle, length)
     edges.push([0,4]);
     edges.push([2,4]);
 
-    pts.push(mp);
+    pts.push([mp[0],mp[1],false]);
     edges.push([0,5]);
 
     var np3 = [np1[0]+mp[0], np1[1]+mp[1], false];
@@ -267,8 +386,9 @@ function createALinkage(root, p1, p2, angle, length)
 
     edges.push([0,pts.length-1]);
     edges.push([pts.length-2,pts.length-1]);
-
     console.log(pts);
+
+
     return [pts, edges];
 }
 
@@ -296,7 +416,40 @@ function perpendicular(ax, ay, x1, y1, x2, y2)
 function bracePara(angle,n,p1,p2){
 }
 
-function braceContraPara(angle,n,p1,p2){
+/*
+INPUT: four points of the ContraPara, l1, the length
+of the short side, l2 the length of the long side
+*/
+function braceContraPara(a,b,c,d){
+    //Length of the struts
+    var l1 = distance(a,b);
+    var l2 = distance(b,c);
+    var r2 = (l1+l2)/2.0;
+    var r1 = Math.sqrt(r2*r2-0.25*(l2*l2-l1*l1));
+    //Points on longer struts
+    var P = midpoint(a,b);
+    var R = midpoint(a,d);
+    var S = midpoint(b,c);
+    var Q = midpoint(d,c);
+    //Figure out position of last point
+    var base = distance(R,S);
+    var alt = Math.sqrt(r1*r1-(base*0.5)*(base*0.5));
+    var dx = R[0] - S[0];
+    var dy = R[1] - S[1];
+    var norm = normalize([-dy,dx]);
+    var start = midpoint(R,S);
+    var T = [start[0]+norm[0]*alt,start[1]+norm[1]*alt,false];
+    //alert(JSON.stringify(distance(a,b)));
+    return [P,R,S,Q,T,r1,r2];
+
+}
+function midpoint(p1,p2){
+    return [0.5*(p1[0]+p2[0]),0.5*(p1[1]+p2[1]),false];
+}
+function distance(p1,p2){
+    var xdist = p1[0]-p2[0];
+    var ydist = p1[1]-p2[1]; 
+    return Math.sqrt(xdist*xdist+ydist*ydist);
 }
 // $(document).ready(function(){
 //     parent = createParent(1,1,1);
