@@ -27,7 +27,12 @@ var edit_mode;
 var lastpos;
 var RADIUS = 10;
 var cx, cy, sx, sy;
+var cmx, cmy;
 var lines = {};
+var world;
+var bodies;
+var mousejoint;
+var BOX2DPHYSICS = false;
 
 function kempeStart() {
     cvs = document.getElementById("graphics-canvas");
@@ -79,6 +84,96 @@ function recalcViewDimentions()
     last_doc_length = window.innerHeight;
 }
 
+function createPhysicsWorld() {
+    var   b2Vec2 = Box2D.Common.Math.b2Vec2
+       ,  b2AABB = Box2D.Collision.b2AABB
+       ,  b2BodyDef = Box2D.Dynamics.b2BodyDef
+       ,  b2Body = Box2D.Dynamics.b2Body
+       ,  b2FixtureDef = Box2D.Dynamics.b2FixtureDef
+       ,  b2Fixture = Box2D.Dynamics.b2Fixture
+       ,  b2World = Box2D.Dynamics.b2World
+       ,  b2MassData = Box2D.Collision.Shapes.b2MassData
+       ,  b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
+       ,  b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
+       ,  b2DebugDraw = Box2D.Dynamics.b2DebugDraw
+       ,  b2MouseJointDef =  Box2D.Dynamics.Joints.b2MouseJointDef
+       ,  b2DistanceJoint = Box2D.Dynamics.Joints.b2DistanceJoint
+       ,  b2DistanceJointDef = Box2D.Dynamics.Joints.b2DistanceJointDef
+       ,  b2RevolveJoint = Box2D.Dynamics.Joints.b2RevoluteJoint
+       ,  b2RevolveJointDef = Box2D.Dynamics.Joints.b2RevoluteJointDef
+       ;
+    world = new b2World(
+          new b2Vec2(0, 0)    //gravity
+       ,  true                 //allow sleep
+    );
+    bodies = [];
+
+    var emptyvec = new b2Vec2();
+
+    var fixDef = new b2FixtureDef;
+    fixDef.density = 1.0;
+    fixDef.friction = 0.5;
+    fixDef.restitution = 0.2;
+
+    fixDef.shape = new b2CircleShape(RADIUS);
+    fixDef.filter.categoryBits = 1;
+    fixDef.filter.maskBits = 0;
+
+    var bodyDef = new b2BodyDef;
+
+    // for (var i=data.length-1; i>=0; i--)
+    for (var i=0; i<data[0].length; i++)
+    {
+
+        if (data[0][i][2])
+            bodyDef.type = b2Body.b2_staticBody;
+        else
+            bodyDef.type = b2Body.b2_dynamicBody;
+        bodyDef.position.x = data[0][i][0];
+        bodyDef.position.y = data[0][i][1];
+        var bod = world.CreateBody(bodyDef);
+        bod.CreateFixture(fixDef);
+
+        bodies.push(bod);
+        bod.m_angularDamping = 30.0;
+        bod.m_linearDamping = 30.0;
+    }
+
+    var distJointDef = new b2DistanceJointDef;
+    distJointDef.collideConnected = false;
+    var revJointDef = new b2RevolveJointDef;
+    revJointDef.collideConnected = false;
+
+    // distJointDef.frequencyHz = 30;
+    // distJointDef.dampingRatio = 1;
+
+    bodyDef.type = b2Body.b2_dynamicBody;
+    var j;
+
+    for (var i=0; i<data[1].length; i++)
+    {
+        // fixDef.shape = new b2PolygonShape;
+        // fixDef.shape.SetAsEdge(new b2Vec2(0, 0),
+        //                         new b2Vec2(data[0][data[1][i][1]][0]-data[0][data[1][i][0]][0], 
+        //                                     data[0][data[1][i][1]][1]-data[0][data[1][i][0]][1]));
+        // bodyDef.position.x = data[0][data[1][i][0]][0];
+        // bodyDef.position.y = data[0][data[1][i][0]][1];
+        // var bod = world.CreateBody(bodyDef);
+        // bod.CreateFixture(fixDef);
+        // revJointDef.Initialize(bod, bodies[data[1][i][0]], bodies[data[1][i][0]].GetWorldCenter());
+        // j = world.CreateJoint(revJointDef);
+        // revJointDef.Initialize(bod, bodies[data[1][i][1]], bodies[data[1][i][1]].GetWorldCenter());
+        // j = world.CreateJoint(revJointDef);
+
+        distJointDef.Initialize(bodies[data[1][i][0]], 
+            bodies[data[1][i][1]], 
+            bodies[data[1][i][0]].GetWorldCenter(), 
+            bodies[data[1][i][1]].GetWorldCenter());
+        j = world.CreateJoint(distJointDef);
+
+    }
+}
+
 function initProcessLinesAndPoints() {
     lines = {};
     for (var i=0; i<data[1].length; i++)
@@ -99,6 +194,7 @@ function initProcessLinesAndPoints() {
         var s = k.split(" ");
         var p1 = parseInt(s[0]);
         var p2 = parseInt(s[1]);
+        if (data[0][p1][2] && data[0][p2][2]) continue;
         var x = data[0][p1][0]-data[0][p2][0];
         var y = data[0][p1][1]-data[0][p2][1];
         data[1].push([p1, p2, Math.sqrt(x*x+y*y)]);
@@ -116,6 +212,8 @@ function initProcessLinesAndPoints() {
         if (data[0][i][2] === 0)
             data[0][i][2] = false;
     }
+
+    // createPhysicsWorld();
 }
 
 function hasLine(l) {
@@ -184,10 +282,10 @@ function init() {
     [
         [
             [0  ,   0   ,   true],
-            [0  ,   100 ,   false]
+            [0  ,   1 ,   false]
         ],
         [
-            [0, 1,  100],
+            [0, 1,  1],
         ]
     ];
 
@@ -195,16 +293,33 @@ function init() {
     [
         [
             [0  ,   0   ,   true],
-            [0  ,   100 ,   false],
-            [100,   0   ,   false],
-            [100,   100 ,   false]
+            [0  ,   1 ,   false],
+            [1,   0   ,   false],
+            [1,   1 ,   false]
         ],
         [
-            [0, 1,  100],
-            [0, 2,  100],
-            [2, 3,  100],
-            [1, 3,  100],
+            [0, 1,  1],
+            [0, 2,  1],
+            [2, 3,  1],
+            [1, 3,  1],
         ]
+    ];
+
+    var data3 = 
+    [
+        [
+            [0, 0, true],
+            [1, 0, false],
+            [0, 1, false],
+            [1, 1, false]
+        ],
+        [
+            [0, 1],
+            [0, 2],
+            [1, 3],
+            [2, 3]
+        ],
+
     ];
 
     data = data1;
@@ -227,13 +342,13 @@ function init() {
     //document.write(JSON.stringify(parent));
     terms = [[1.4,0,2,0],[5,1,0,0],[5,0,0,Math.PI/1.2]];
     mul = createKempeLinkage(1,1,terms);
-    data = mul;
+    data = data1;
     // data[0].push([0,0]);
     // data[0].push([8,4]);
     // data[0].push([4,8]);
     // data[0].push([12,12]);
     // data[1].push([0, data[0].length-3]);
-
+    // data = data2;
 
     initProcessLinesAndPoints();
 }
@@ -332,12 +447,71 @@ function toggleEditMode() {
         initProcessLinesAndPoints();
 }
 
+var count = 0;
 function update() {
     handleKeys();
     if (!edit_mode)
     {
-        var forces = evalForces(data);
-        timeStep(data, forces, 0.1);
+        // for (var i=0; i<data[1].length; i++)
+        // {
+        //     var x = data[0][data[1][i][0]][0]-data[0][data[1][i][1]][0];
+        //     var y = data[0][data[1][i][0]][1]-data[0][data[1][i][1]][1];
+        //     var len = Math.sqrt(x*x+y*y);
+        //     if (Math.abs(len-data[1][i][2]) > 0.1)
+        //     {
+
+        //     }
+        // }
+        // if (selected)
+        // {
+        //     if (!(cmx === undefined || cmy === undefined))
+        //     {
+        //         var dx = cmx-data[0][selected-1][0];
+        //         var dy = cmy-data[0][selected-1][1];
+        //         if (!(Math.abs(dx) <= RADIUS/2.0/sx && Math.abs(dy) <= RADIUS/2.0/sx))
+        //         {
+        //             var forces = evalForces2(data, selected-1, dx, dy);
+        //             // console.log(cmx,cmy);
+        //             timeStep(data, forces, 0.1);
+        //         } else
+        //         {
+        //         }
+        //     }
+            
+        // }
+        // var forces = evalForces(data);
+        // timeStep(data, forces, 0.1);
+        count++;
+        if (selected)
+        {
+            var dx = cmx-data[0][selected-1][0];
+            var dy = cmy-data[0][selected-1][1];
+            var forces = evalForces3(data, selected-1, dx, dy);
+            timeStep(data, forces, 0.1);
+            // if (count<=10)
+            //     console.log(forces);
+        } else
+        {
+            var i = 0;
+            for (i=0; i<data[0].length; i++)
+                if (!data[0][i][2]) break;
+            var forces = evalForces3(data, i, 0, 0);
+            timeStep(data, forces, 0.1);
+            // if (count<=10)
+            //     console.log(forces);
+        }
+
+
+        // for (var i=0; i<bodies.length; i++)
+        // {
+        //     var pos = bodies[i].GetPosition();
+        //     data[0][i][0] = pos.x;
+        //     data[0][i][1] = pos.y;
+        //     // console.log(pos);
+        // }
+
+        // world.Step(1 / 60, 10, 10);
+        // world.ClearForces();
     }
 }
 
@@ -541,6 +715,18 @@ function handleMouseDown(e) {
                 selected = i+1;
                 lastpos[0] = mx;
                 lastpos[1] = my;
+                if (BOX2DPHYSICS)
+                {
+                    var md = new Box2D.Dynamics.Joints.b2MouseJointDef();
+                    md.bodyA = world.GetGroundBody();
+                    md.bodyB = bodies[selected-1];
+                    md.bodyB.SetAwake(true);
+                    md.target.Set(cmx, cmy);
+                    md.maxForce = 300.0 * md.bodyB.GetMass();
+                    md.collideConnected = false;
+                    mousejoint = world.CreateJoint(md);
+                }
+
                 break;
             }
         }
@@ -581,7 +767,6 @@ function handleMouseMove(e) {
                 data[0][selected-1][1] += my-lastpos[1];
                 lastpos[0] = mx;
                 lastpos[1] = my;
-                // call physics code here
             } else if (dragging)
             {
                 var mx = e.offsetX;
@@ -596,15 +781,29 @@ function handleMouseMove(e) {
 
     } else
     {
+        cmx = (e.offsetX-cx)/sx;
+        cmy = (e.offsetY-cy)/sy;
         if (selected != false)
         {
             var mx = (e.offsetX-cx)/sx;
             var my = (e.offsetY-cy)/sy;
-            data[0][selected-1][0] += mx-lastpos[0];
-            data[0][selected-1][1] += my-lastpos[1];
+            cmx = mx;
+            cmy = my;
+            if (BOX2DPHYSICS)
+            {
+                mousejoint.SetTarget(new Box2D.Common.Math.b2Vec2(cmx, cmy));
+            }
+            // var dx = mx-lastpos[0];
+            // var dy = my-lastpos[1];
+            var dx = mx-data[0][selected-1][0];
+            var dy = my-data[0][selected-1][1];
+            // data[0][selected-1][0] += dx;
+            // data[0][selected-1][1] += dy;
             lastpos[0] = mx;
             lastpos[1] = my;
             // call physics code here
+            // var forces = evalForces2(data, selected-1, dx, dy);
+            // timeStep(data, forces, 0.1);
         } else if (dragging)
         {
             var mx = e.offsetX;
@@ -670,6 +869,14 @@ function handleMouseUp(e) {
     {
         selected = false;
         dragging = false;
+        if (BOX2DPHYSICS)
+        {
+            if (mousejoint !== null)
+            {
+                world.DestroyJoint(mousejoint);
+                mouseJoint = null; 
+            }
+        }
     }
 }
 
@@ -698,6 +905,11 @@ function handleMouseOut(e) {
         selected = false;
         dragging = false;
         hilight = false;
+        if (BOX2DPHYSICS)
+        {
+            world.DestroyJoint(mousejoint);
+            mouseJoint = null;
+        }
     }
 }
 

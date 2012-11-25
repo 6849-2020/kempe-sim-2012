@@ -1,4 +1,4 @@
-/*
+
    hi
 function ParticleSystem() {
         particles = new Array();
@@ -32,7 +32,7 @@ function ParticleSystem() {
         
 
 }
-*/
+
 
 
 function evalForces(data) {
@@ -83,6 +83,279 @@ function evalForces(data) {
 
     return f;
 
+}
+
+function evalForces2(data, fi, fx, fy) {
+    // fx = fx/Math.abs(fx)*Math.min(Math.abs(fx),10);
+    // fy = fy/Math.abs(fy)*Math.min(Math.abs(fy),10);
+    var flen = Math.sqrt(fx*fx+fy*fy);
+
+    if (flen > 0.1)
+    {
+        fx = fx/flen;
+        fy = fy/flen;
+    }
+    flen = Math.min(flen, 10);
+    fx *= flen;
+    fy *= flen;
+
+    var p = data[0];
+    var e = data[1];
+    var qf = [0,0,0,0];
+    qf[fi*2] = fx;
+    qf[fi*2+1] = fy;
+    qf[0] += p[0][3]*(-5);
+    qf[1] += p[0][4]*(-5);
+    qf[2] += p[1][3]*(-5);
+    qf[3] += p[1][4]*(-5);
+
+    var j = [   p[0][0]-p[1][0], 
+                p[0][1]-p[1][1],
+                p[1][0]-p[0][0],
+                p[1][1]-p[0][1]];
+    var jd = [  p[0][3]-p[1][3], 
+                p[0][4]-p[1][4],
+                p[1][3]-p[0][3],
+                p[1][4]-p[0][4]];
+
+
+
+    var node;
+    var c = (p[0][0]-p[1][0])*(p[0][0]-p[1][0])+(p[0][1]-p[1][1])*(p[0][1]-p[1][1])-1;
+    var cdot = j[0]*p[0][3]+j[1]*p[0][4]+j[2]*p[1][3]+j[3]*p[1][4];
+
+    var w = 1;
+
+    var lambda = (-w*(jd[0]*p[0][3]+jd[1]*p[0][4]+jd[2]*p[1][3]+jd[3]*p[1][4])
+        -(j[0]*qf[0]+j[1]*qf[1]+j[2]*qf[2]+j[3]*qf[3])  - 5*c -10*cdot  )/(j[0]*j[0]+j[1]*j[1]+j[2]*j[2]+j[3]*j[3]);
+
+
+    var jtl = [ j[0]*lambda,
+                j[1]*lambda,
+                j[2]*lambda,
+                j[3]*lambda];
+
+    qf[0] += jtl[0];
+    qf[1] += jtl[1];
+    qf[2] += jtl[2];
+    qf[3] += jtl[3];
+
+
+
+    var f = [];
+    f.push([p[0][3], p[0][4], false, qf[0], qf[1]]);
+    f.push([p[1][3], p[1][4], false, qf[2], qf[3]]);
+
+    return f;
+}
+
+var ccccc = 0;
+function evalForces3(data, fi, fx, fy) {
+    // fx = fx/Math.abs(fx)*Math.min(Math.abs(fx),10);
+    // fy = fy/Math.abs(fy)*Math.min(Math.abs(fy),10);
+    var flen = Math.sqrt(fx*fx+fy*fy);
+
+    if (flen > 0.1)
+    {
+        fx = fx/flen;
+        fy = fy/flen;
+    }
+    flen = Math.min(flen, 10);
+    fx *= flen;
+    fy *= flen;
+
+    var p = data[0];
+    var e = data[1];
+
+    var m = [];
+    var mr = [];
+    var mi = 0;
+    for (var i=0; i<p.length; i++)
+    {
+        if (!p[i][2])
+        {
+            mr.push(m.length);
+            m.push(i);
+        } else mr.push(-1);
+    }
+
+    var qf = [];
+    for (var i=0; i<m.length; i++)
+    {
+        qf.push(p[m[i]][3]*(-5));
+        qf.push(p[m[i]][4]*(-5));
+    }
+    
+    qf[mr[fi]*2] += fx;
+    qf[mr[fi]*2+1] += fy;
+
+    var j = [];
+    var jd = [];
+    for (var i=0; i<e.length; i++)
+    {
+        j.push([]);
+        jd.push([]);
+        for (var ii=0; ii<m.length; ii++)
+        {
+            j[i].push(0);
+            j[i].push(0);
+            jd[i].push(0);
+            jd[i].push(0);
+        }
+        if (!p[e[i][0]][2])
+        {
+            var mm = mr[e[i][0]];
+            j[i][mm*2]   = p[e[i][0]][0] - p[e[i][1]][0];
+            j[i][mm*2+1] = p[e[i][0]][1] - p[e[i][1]][1];
+            jd[i][mm*2]   = p[e[i][0]][3] - p[e[i][1]][3];
+            jd[i][mm*2+1] = p[e[i][0]][4] - p[e[i][1]][4];
+        }
+        if (!p[e[i][1]][2])
+        {
+            var mm = mr[e[i][1]];
+            j[i][mm*2]   =  p[e[i][1]][0] - p[e[i][0]][0];
+            j[i][mm*2+1] =  p[e[i][1]][1] - p[e[i][0]][1];
+            jd[i][mm*2]   =  p[e[i][1]][3] - p[e[i][0]][3];
+            jd[i][mm*2+1] =  p[e[i][1]][4] - p[e[i][0]][4];
+        }
+    }
+
+
+    var node;
+    var c = [];
+    for (var i=0; i<e.length; i++)
+    {
+        var dx = p[e[i][0]][0] - p[e[i][1]][0];
+        var dy = p[e[i][0]][1] - p[e[i][1]][1];
+        c.push(dx*dx+dy*dy-e[i][2]*e[i][2]);
+    }
+    var cdot = [];
+    for (var i=0; i<e.length; i++)
+    {
+        var val = 0;
+        for (var ii=0; ii<m.length; ii++)
+        {
+            val += j[i][ii*2]*p[m[ii]][3] + j[i][ii*2+1]*p[m[ii]][4];
+        }
+        cdot.push(val);
+    }
+
+    var w = 1;
+
+    var num = [];
+    for (var i=0; i<e.length; i++)
+    {
+        var val = 0;
+        for (var ii=0; ii<m.length; ii++)
+        {
+            val += jd[i][ii*2]*p[ii][3] + jd[i][ii*2+1]*p[ii][4];
+            val += j[i][ii*2]*qf[ii*2] + j[i][ii*2+1]*qf[ii*2+1];
+        }
+        num.push(-val  -5*c[i]  -10*cdot[i]);
+    }
+
+    var jt = numeric.transpose(j);
+    var jjt = numeric.dot(j,jt);
+
+    var lambda;
+
+    if (numeric.det(jjt) > 0.000001)
+        lambda = numeric.solve(jjt, num);
+    else 
+        lambda = conjugategrad(jjt, num);
+    // var lambda = numeric.solve(jjt, num);
+    // var lambda = conjugategrad(jjt, num);
+    // var xsol = [];
+    // for (var i=0; i<num.length; i++)
+    //     xsol.push([0]);
+    // var lambda = jStat.SOR(jjt, num, xsol, 0.01, 1);
+    // if (ccccc++<10)
+    // {
+    //     console.log(j);
+    //     console.log(qf);
+    //     console.log(c);
+    //     console.log(lambda);
+    //     console.log(numeric.det(jjt));
+    // }
+
+    var jtl = numeric.dot(jt, lambda);
+
+    for (var i=0; i<qf.length; i++)
+        qf[i] += jtl[i];
+
+
+    var f = [];
+    for (var i=0; i<p.length; i++)
+    {
+        if (p[i][2])
+        {
+            f.push([0,0,true,0,0]);
+        } else
+        {
+            f.push([p[i][3], p[i][4], false, qf[mr[i]*2], qf[mr[i]*2+1]]);
+        }
+    }
+    return f;
+}
+
+function conjugategrad(A, b)
+{
+    // console.log("new call");
+    var ccc = 0;
+    var x = [];
+    var r = [];
+    var p = [];
+    var rold = [];
+    var pold = [];
+    var rval = 0;
+    for (var i=0; i<b.length; i++)
+    {
+        x.push(0);
+        r.push(0);
+        p.push(0);
+        rold.push(0);
+        pold.push(0);
+    }
+    // var ans = numeric.dot(A,x);
+    for (var i=0; i<b.length; i++)
+    {
+        p[i] = r[i] = b[i];
+        rval += r[i]*r[i];
+    }
+
+    while (true)
+    {
+        var q = numeric.dot(A, r);
+        var qq = 0;
+        for (var i=0; i<r.length; i++)
+            qq += r[i]*q[i];
+        var alpha = rval/qq;
+
+        var rsize = 0;
+        for (var i=0; i<r.length; i++)
+        {
+            x[i] = x[i] + alpha * r[i];
+        }
+
+        r = numeric.dot(A,x)
+
+        rval = 0;
+        for (var i=0; i<r.length; i++)
+        {
+            r[i] = b[i]-r[i];
+
+            rval += r[i]*r[i];
+        }
+
+        // if (ccc++ < 200)
+        // {
+        //     console.log(rsize);
+        //     console.log(x);
+        // }
+        if (rval < 0.01) break;
+
+    }
+    return x;
 }
 
 function timeStep(data, forces, t) {
