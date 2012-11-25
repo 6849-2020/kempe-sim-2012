@@ -1,4 +1,5 @@
 /*
+   hi
 function ParticleSystem() {
         particles = new Array();
         particles[0] = new Particle(100,100);
