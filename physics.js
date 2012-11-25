@@ -41,7 +41,7 @@ function evalForces(data) {
     var f = new Array();
     var node;
 
-    var kdrag = 5;
+    var kdrag = 50;
     for (var i = 0; i < state.length; i++) {
         node = state[i];
 
@@ -58,7 +58,7 @@ function evalForces(data) {
     }
 
     //spring forces
-    var kspring = 10;
+    var kspring = 1000;
     for (var i = 0; i < edges.length; i++) {
         var edge = edges[i]; 
         var pt1 = state[edge[0]];
@@ -123,3 +123,25 @@ function RK4step(data, forces, t) {
 
 }
 */
+function RK4step(data, forces, t) {
+    var oldData = data.slice(0);
+
+    var a = evalForces(oldData);
+    timeStep(oldData, a, t/2);
+    var b = evalForces(oldData);
+    timeStep(oldData, b, t/2);
+    var c = evalForces(oldData);
+    timeStep(oldData, c, t);
+    var d = evalForces(oldData);
+
+    state = data[0];
+    for (var i = 0; i < state.length; i++) {
+        node = state[i];
+        node[0] += t*(a[i][0] + 2*b[i][0] + 2*c[i][0] +d[i][0])/6;
+        node[1] += t*(a[i][1] + 2*b[i][1] + 2*c[i][1] +d[i][1])/6;
+        node[3] += t*(a[i][3] + 2*b[i][3] + 2*c[i][3] +d[i][3])/6;
+        node[4] += t*(a[i][4] + 2*b[i][4] + 2*c[i][4] +d[i][4])/6;
+    }
+
+
+}
