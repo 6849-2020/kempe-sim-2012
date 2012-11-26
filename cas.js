@@ -392,11 +392,71 @@ function constructCosReporesentation(e) {
     {
         var coeff = l[x];
         var split = x.split(" ");
-        terms.push([coeff, parseInt(split[0]), 
+        if (coeff == 0) continue;
+        var newterm = [coeff, parseInt(split[0]), 
                             parseInt(split[1]), 
-                            parseInt(split[2])]);
+                            parseInt(split[2])];
+        if (newterm[0] == 0 && newterm[1] == 0)
+        {
+            terms[0] += Math.cos(newterm[2])*coeff;
+        } else
+            terms.push(newterm);
     }
     return terms;
+}
+
+function strCos(a)
+{
+    var s = "";
+    var total = 0;
+    if (a[0])
+    {
+        total++;
+        s += a;
+    }
+    for (var i=1; i<a.length; i++)
+    {
+        if (a[i][0] > 0)
+            if (total > 0)
+                s += "+";
+        s += a[i][0]+"cos(";
+        var terms = 0;
+        if (a[i][1])
+        {
+            if (a[i][1]!=1)
+                s += a[i][1];
+            s += "a"
+            terms++;
+        }
+        if (a[i][2])
+        {
+            if (a[i][2]>0)
+            {
+                if (terms > 0)
+                    s += "+";
+                if (a[i][2]!=1)
+                    s += a[i][2];
+            } else
+            {
+                if (a[i][2] == -1)
+                    s += "-";
+                else
+                    s += a[i][2];
+            }
+            s += "b"
+            terms++;
+        }
+        if (a[i][3])
+        {
+            if (terms > 0)
+                if (a[i][3]>0)
+                    s += "+";
+            s += a[i][3];
+        }
+        s += ")";
+        total++;
+    }
+    return s;
 }
 
 
