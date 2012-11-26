@@ -320,6 +320,8 @@ function createTerm(s) {
 }
 
 function createEquation(s) {
+    if (s=="")
+        return new Equation([]);
     var x=0;
     var terms = [];
     for (var y=1; y<s.length; y++)
@@ -355,7 +357,7 @@ function cosTerm(coeff, t, i, c, mult, l) {
     {
         var id = cosID(c);
         var v = l[id];
-        var newv = Math.pow(0.5,t.length)*coeff;
+        var newv = Math.pow(0.5,t.length-1)*coeff;
         if (v)
             l[id] = v+newv;
         else
@@ -395,10 +397,10 @@ function constructCosReporesentation(e) {
         if (coeff == 0) continue;
         var newterm = [coeff, parseInt(split[0]), 
                             parseInt(split[1]), 
-                            parseInt(split[2])];
-        if (newterm[0] == 0 && newterm[1] == 0)
+                            parseFloat(split[2])];
+        if (newterm[1] == 0 && newterm[2] == 0)
         {
-            terms[0] += Math.cos(newterm[2])*coeff;
+            terms[0] += Math.cos(newterm[2]*Math.PI)*coeff;
         } else
             terms.push(newterm);
     }
@@ -412,14 +414,25 @@ function strCos(a)
     if (a[0])
     {
         total++;
-        s += a;
-    }
+        s += a[0];
+    } else if (a.length == 1)
+        return "0";
     for (var i=1; i<a.length; i++)
     {
         if (a[i][0] > 0)
+        {
             if (total > 0)
                 s += "+";
-        s += a[i][0]+"cos(";
+            if (a[i][0] != 1)
+                s += a[i][0];
+        } else
+        {
+            if (a[i][0] == -1)
+                s += "-";
+            else
+                s += a[i][0];
+        }
+        s += "cos(";
         var terms = 0;
         if (a[i][1])
         {
@@ -448,10 +461,20 @@ function strCos(a)
         }
         if (a[i][3])
         {
-            if (terms > 0)
-                if (a[i][3]>0)
+            if (a[i][3]>0)
+            {
+                if (terms > 0)
                     s += "+";
-            s += a[i][3];
+                if (a[i][3]!=1)
+                    s += a[i][3];
+            } else
+            {
+                if (a[i][3] == -1)
+                    s += "-";
+                else
+                    s += a[i][3];
+            }
+            s += "PI";
         }
         s += ")";
         total++;

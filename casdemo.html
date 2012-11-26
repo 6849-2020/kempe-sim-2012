@@ -10,9 +10,11 @@ function update() {
     if (!input) input = document.getElementById("input");
     if (!output) output = document.getElementById("output");
     var e3 = createEquation(input.value);
-    var cos = constructCosReporesentation(e3.evalequ('x',createEquation("a+b"))
-                            .evalequ('y',createEquation("c+d")));
+    var e3e = e3.evalequ('x',createEquation("a+b"))
+                            .evalequ('y',createEquation("c+d"));
+    var cos = constructCosReporesentation(e3e);
     output.value = strCos(cos);
+    console.log(e3e.str());
     console.log(cos);
 }
 
