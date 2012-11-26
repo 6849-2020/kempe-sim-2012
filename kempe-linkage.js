@@ -1,7 +1,7 @@
 //FIX FIND LINE, REFLECT
  
  function createParent(a,b,l){
-    var points = [[0,0,true],[8,4,false],[4,8,false],[11,11,false]];
+    var points = [[0,0,true],[8,4,false],[4,8,false],[12,12,false]];
     var l = 4*Math.sqrt(5);
     var edges = [[0,1,l],[0,2,l],[1,3,l],[2,3,l]];
     return[points,edges];
@@ -23,11 +23,12 @@ function createKempeLinkage(a,b,terms){
     var final_term_links = [];
     //Parent parallelogram p [[p_o,p_a,p_b,p_f],[o_a,o_b,a_f,b_f]
     var parent = createParent(a,b,1);
-    var linkage_pts = parent[0];
-    var linkage_edges = parent[1].concat([1,3,1][2,3,1]);
+    var linkage_pts = [parent[0][0], normalize(parent[0][1]).concat([false]), normalize(parent[0][2]).concat([false])];
+    var linkage_edges = [] //parent[1];//.concat([1,3,1][2,3,1]);
     shift = 0;
     for (var i = 0; i < terms.length; i++){
-        var linkage_term = createLinkage(parent,terms[i]);
+        var linkage_term = createLinkage(linkage_pts,terms[i]);
+        // linkage_term[0].splice(0,4);
         linkage_pts = linkage_pts.concat(linkage_term[0]);
         //alert(JSON.stringify(linkage_term));
         final_term_links.push(linkage_pts.length-1);
@@ -45,6 +46,7 @@ function createKempeLinkage(a,b,terms){
             shift_edges.push([newp1,newp2,linkage_term[1][i][2]]);
         }
         shift = shift + linkage_term[0].length;
+        console.log(linkage_term);
         linkage_edges = linkage_edges.concat(shift_edges);
     }
 
@@ -87,6 +89,18 @@ function createKempeLinkage(a,b,terms){
             }
         }
     }
+
+    linkage_pts.push(parent[0][1], parent[0][2], parent[0][3]);
+    linkage_edges.push(
+            [0, linkage_pts.length-3],
+            [1, linkage_pts.length-3],
+            [0, linkage_pts.length-2],
+            [2, linkage_pts.length-2],
+            [linkage_pts.length-3, linkage_pts.length-1],
+            [linkage_pts.length-2, linkage_pts.length-1]
+
+        );
+    console.log([linkage_pts,linkage_edges]);
     return [linkage_pts,linkage_edges];
 }
 
@@ -104,13 +118,16 @@ RETURNS: list representation of the linkage[[p_1,p_2...],[e_1,e_2...]] where p_i
 p1 and p2 of the multiplicators.
 */
 function createLinkage(parent, params){
+  console.log(parent);
   var linkage = [];
   //Multiplicator terms, returns additional points,edges to be attached to parent
-  var p_edge_length = parent[1][0][2];
-  var mul_one = createMLinkage(params[1],parent[0][0],parent[0][1],p_edge_length);
-  var mul_two = createMLinkage(params[2],parent[0][0],parent[0][2],p_edge_length);
+  var p_edge_length = 1.0 // parent[1][0][2];
+  var mul_one = createMLinkage(params[1],parent[0],parent[1],p_edge_length);
+  var mul_two = createMLinkage(params[2],parent[0],parent[2],p_edge_length);
   // //document.write(JSON.stringify(mul_one));
   // //document.write(JSON.stringify(mul_two));
+  console.log(mul_one);
+  console.log(mul_two);
 
 
   //Combine mul_one and mul_two, they share points in the parent
@@ -125,10 +142,10 @@ function createLinkage(parent, params){
     var newp1 = mul_one[1][i][0];
     var newp2 = mul_one[1][i][1];
     if (newp1 != 0 && newp1 != 1){
-        newp1 = 2 + newp1;
+        newp1 = 1 + newp1;
     }
     if (newp2 != 0 && newp2 != 1){
-        newp2 = 2 + newp2;
+        newp2 = 1 + newp2;
     }
     mul_one_edges.push([newp1,newp2,mul_one[1][i][2]]);
   }
@@ -139,7 +156,7 @@ function createLinkage(parent, params){
   mul_two_pts.splice(0,2);
   //modify edges so that any edge with index 1
   //now points to index 2, shift rest.
-  var shift = mul_one_pts.length + 2;
+  var shift = mul_one_pts.length +1;
   var mul_two_edges = [];
   for(var i = 0; i < mul_two[1].length; i++){
     var newp1 = mul_two[1][i][0];
@@ -165,7 +182,10 @@ function createLinkage(parent, params){
 
   //Put them through the additor;
   //alert(JSON.stringify(mul_one_pts));
-  var additor = createALinkage(parent[0][0], mul_one_pts[mul_one_pts.length-1], mul_two_pts[mul_two_pts.length-1], params[3], params[0]);
+  var mul_one_last = mul_one_pts.length == 0 ? normalize(parent[1]) : mul_one_pts[mul_one_pts.length-1];
+  var mul_two_last = mul_two_pts.length == 0 ? normalize(parent[2]) : mul_two_pts[mul_two_pts.length-1];
+
+  var additor = createALinkage(parent[0], mul_one_last, mul_two_last, params[3], params[0]);
   //Combine mul pts, edges:
   var final_pts = mul_one_pts.concat(mul_two_pts);
   var final_edges = mul_one_edges.concat(mul_two_edges);
@@ -173,9 +193,9 @@ function createLinkage(parent, params){
 
   var additor_pts = additor[0].slice();
   additor_pts.splice(0,3);
-  var shift = final_pts.length + 1;
-  var p1_pos = mul_one_pts.length + 3;
-  var p2_pos = final_pts.length + 3;
+  var shift = final_pts.length -3+3;
+  var p1_pos = mul_one_pts.length == 0 ? 1 : mul_one_pts.length -1+3;
+  var p2_pos = mul_two_pts.length == 0 ? 2 : final_pts.length -1+3;
   for(var i = 0; i < additor[1].length; i++){
     var newp1 = additor[1][i][0];
     var newp2 = additor[1][i][1];
@@ -225,10 +245,10 @@ function createMLinkage(n,p1,p2,l){
     var pts = []
     var edges = []
     if(n == 0){
-        return[[p1,normalize(p2),[1,0,false]],[[0,1,1]]];
+        return[[p1,normalize(p2)],[[0,1,1]]];
     }
     if(n == 1){
-        return[[p1,normalize(p2),normalize(p2)],[[0,1,1]]];
+        return[[p1,normalize(p2)],[[0,1,1]]];
     }
     //Anchor contra-parallelogram
     var m_1 = [2.0*l,0.0,true];
@@ -317,6 +337,7 @@ function mulContraPara(p1,p2,l){
 
 function createALinkage(root, p1, p2, angle, length)
 {
+    console.log(root, p1, p2, angle, length)
     var mp = [p1[0]+p2[0], p1[1]+p2[1]];
     mp = normalize(mp);
 
@@ -386,7 +407,7 @@ function createALinkage(root, p1, p2, angle, length)
 
     edges.push([0,pts.length-1]);
     edges.push([pts.length-2,pts.length-1]);
-    console.log(pts);
+    // console.log(pts);
 
 
     return [pts, edges];

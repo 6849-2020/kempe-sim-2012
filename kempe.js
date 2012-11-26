@@ -32,7 +32,7 @@ var lines = {};
 var world;
 var bodies;
 var mousejoint;
-var BOX2DPHYSICS = false;
+var BOX2DPHYSICS = true;
 
 function kempeStart() {
     cvs = document.getElementById("graphics-canvas");
@@ -213,7 +213,8 @@ function initProcessLinesAndPoints() {
             data[0][i][2] = false;
     }
 
-    // createPhysicsWorld();
+    if (BOX2DPHYSICS)
+        createPhysicsWorld();
 }
 
 function hasLine(l) {
@@ -340,9 +341,14 @@ function init() {
     // data = createAdditor(1, 2, 2, 1);
     parent = createParent(1,1,1);
     //document.write(JSON.stringify(parent));
-    terms = [[1.4,0,2,0],[5,1,0,0],[5,0,0,Math.PI/1.2]];
+    terms = [
+                [12.3,2,2,Math.PI/2]
+                   , [6,1,1,Math.PI/2]
+                // , [5,1,0,0]
+                // , [5,0,0,Math.PI/1.2]
+            ];
     mul = createKempeLinkage(1,1,terms);
-    data = data1;
+    data = mul;
     // data[0].push([0,0]);
     // data[0].push([8,4]);
     // data[0].push([4,8]);
@@ -481,37 +487,41 @@ function update() {
         // }
         // var forces = evalForces(data);
         // timeStep(data, forces, 0.1);
-        count++;
-        if (selected)
+        
+
+        if (BOX2DPHYSICS)
         {
-            var dx = cmx-data[0][selected-1][0];
-            var dy = cmy-data[0][selected-1][1];
-            var forces = evalForces3(data, selected-1, dx, dy);
-            timeStep(data, forces, 0.1);
-            // if (count<=10)
-            //     console.log(forces);
+            for (var i=0; i<bodies.length; i++)
+            {
+                var pos = bodies[i].GetPosition();
+                data[0][i][0] = pos.x;
+                data[0][i][1] = pos.y;
+                // console.log(pos);
+            }
+            world.Step(1 / 60, 10, 10);
+            world.ClearForces();
         } else
         {
-            var i = 0;
-            for (i=0; i<data[0].length; i++)
-                if (!data[0][i][2]) break;
-            var forces = evalForces3(data, i, 0, 0);
-            timeStep(data, forces, 0.1);
-            // if (count<=10)
-            //     console.log(forces);
+            count++;
+            if (selected)
+            {
+                var dx = cmx-data[0][selected-1][0];
+                var dy = cmy-data[0][selected-1][1];
+                var forces = evalForces3(data, selected-1, dx, dy);
+                timeStep(data, forces, 0.1);
+                // if (count<=10)
+                //     console.log(forces);
+            } else
+            {
+                var i = 0;
+                for (i=0; i<data[0].length; i++)
+                    if (!data[0][i][2]) break;
+                var forces = evalForces3(data, i, 0, 0);
+                timeStep(data, forces, 0.1);
+                // if (count<=10)
+                //     console.log(forces);
+            }
         }
-
-
-        // for (var i=0; i<bodies.length; i++)
-        // {
-        //     var pos = bodies[i].GetPosition();
-        //     data[0][i][0] = pos.x;
-        //     data[0][i][1] = pos.y;
-        //     // console.log(pos);
-        // }
-
-        // world.Step(1 / 60, 10, 10);
-        // world.ClearForces();
     }
 }
 
