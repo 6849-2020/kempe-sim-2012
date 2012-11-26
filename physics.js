@@ -1,4 +1,4 @@
-
+/*
    hi
 function ParticleSystem() {
         particles = new Array();
@@ -32,7 +32,7 @@ function ParticleSystem() {
         
 
 }
-
+*/
 
 
 function evalForces(data) {
