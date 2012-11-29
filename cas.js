@@ -437,7 +437,10 @@ function strCos(a)
         if (a[i][1])
         {
             if (a[i][1]!=1)
-                s += a[i][1];
+                if (a[i][1] == -1)
+                    s += "-";
+                else
+                    s += a[i][1];
             s += "a"
             terms++;
         }

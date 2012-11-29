@@ -33,6 +33,7 @@ var world;
 var bodies;
 var mousejoint;
 var BOX2DPHYSICS = true;
+var USEPHYSICS = true;
 
 function kempeStart() {
     cvs = document.getElementById("graphics-canvas");
@@ -348,7 +349,7 @@ function init() {
                 // , [5,0,0,Math.PI/1.2]
             ];
     mul = createKempeLinkage(1,1,terms);
-    data = mul;
+    data = data1;
     // data[0].push([0,0]);
     // data[0].push([8,4]);
     // data[0].push([4,8]);
@@ -456,7 +457,7 @@ function toggleEditMode() {
 var count = 0;
 function update() {
     handleKeys();
-    if (!edit_mode)
+    if (!edit_mode && USEPHYSICS)
     {
         // for (var i=0; i<data[1].length; i++)
         // {
@@ -508,6 +509,7 @@ function update() {
                 var dx = cmx-data[0][selected-1][0];
                 var dy = cmy-data[0][selected-1][1];
                 var forces = evalForces3(data, selected-1, dx, dy);
+                // RK4step(data, forces, 0.1);
                 timeStep(data, forces, 0.1);
                 // if (count<=10)
                 //     console.log(forces);
@@ -517,6 +519,7 @@ function update() {
                 for (i=0; i<data[0].length; i++)
                     if (!data[0][i][2]) break;
                 var forces = evalForces3(data, i, 0, 0);
+                // RK4step(data, forces, 0.1);
                 timeStep(data, forces, 0.1);
                 // if (count<=10)
                 //     console.log(forces);
@@ -1058,7 +1061,7 @@ function updateAll() {
     }
     lastTime = timeNow;
 
-    update()
+    update();
 }
 
 
@@ -1077,6 +1080,26 @@ function updateEditMode() {
         initProcessLinesAndPoints();
 }
 
+var inputtextbox;
+function updateLinkage() {
+    if (!inputtextbox) inputtextbox = document.getElementById("input");
+    parent = createParent(1,1,1);
+    //document.write(JSON.stringify(parent));
+    var e3 = createEquation(input.value);
+    var e3e = e3.evalequ('x',createEquation("a+b"))
+                            .evalequ('y',createEquation("c+d"));
+    var cos = constructCosReporesentation(e3e);
+    // output.value = strCos(cos);
+    // console.log(e3e);
+    // console.log(e3e.str());
+    // console.log(cos);
+    terms = cos;
+    terms.splice(0,1);
+    mul = createKempeLinkage(1,1,terms);
+    data = mul;
+    toggleEditMode();
+    toggleEditMode();
+}
 
 // in case there's no console
 fakeconsole = {};

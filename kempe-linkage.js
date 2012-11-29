@@ -46,7 +46,7 @@ function createKempeLinkage(a,b,terms){
             shift_edges.push([newp1,newp2,linkage_term[1][i][2]]);
         }
         shift = shift + linkage_term[0].length;
-        console.log(linkage_term);
+        // console.log(linkage_term);
         linkage_edges = linkage_edges.concat(shift_edges);
     }
 
@@ -100,7 +100,7 @@ function createKempeLinkage(a,b,terms){
             [linkage_pts.length-2, linkage_pts.length-1]
 
         );
-    console.log([linkage_pts,linkage_edges]);
+    // console.log([linkage_pts,linkage_edges]);
     return [linkage_pts,linkage_edges];
 }
 
@@ -118,7 +118,7 @@ RETURNS: list representation of the linkage[[p_1,p_2...],[e_1,e_2...]] where p_i
 p1 and p2 of the multiplicators.
 */
 function createLinkage(parent, params){
-  console.log(parent);
+  // console.log(parent);
   var linkage = [];
   //Multiplicator terms, returns additional points,edges to be attached to parent
   var p_edge_length = 1.0 // parent[1][0][2];
@@ -126,8 +126,8 @@ function createLinkage(parent, params){
   var mul_two = createMLinkage(params[2],parent[0],parent[2],p_edge_length);
   // //document.write(JSON.stringify(mul_one));
   // //document.write(JSON.stringify(mul_two));
-  console.log(mul_one);
-  console.log(mul_two);
+  // console.log(mul_one);
+  // console.log(mul_two);
 
 
   //Combine mul_one and mul_two, they share points in the parent
@@ -337,7 +337,7 @@ function mulContraPara(p1,p2,l){
 
 function createALinkage(root, p1, p2, angle, length)
 {
-    console.log(root, p1, p2, angle, length)
+    // console.log(root, p1, p2, angle, length)
     var mp = [p1[0]+p2[0], p1[1]+p2[1]];
     mp = normalize(mp);
 
