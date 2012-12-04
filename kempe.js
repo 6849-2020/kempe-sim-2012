@@ -262,6 +262,54 @@ function removeLine(l) {
     }
 }
 
+function renameLines(a, b) {
+    for (var x=0; x<data[1].length; x++)
+    {
+        if (data[1][x][0] == a || data[1][x][1] == a)
+        {
+            if (data[1][x][0] > data[1][x][1])
+            {
+                var temp = data[1][x][0];
+                data[1][x][0] = data[1][x][1];
+                data[1][x][1] = temp;
+            }
+            lines[data[1][x][0]+" "+data[1][x][1]] = false;
+            delete lines[data[1][x][0]+" "+data[1][x][1]]
+            if (data[1][x][0] == a) data[1][x][0] = b;
+            else data[1][x][1] = b;
+            if (data[1][x][0] > data[1][x][1])
+            {
+                var temp = data[1][x][0];
+                data[1][x][0] = data[1][x][1];
+                data[1][x][1] = temp;
+            }
+            lines[data[1][x][0]+" "+data[1][x][1]] = x;
+        }
+    }
+}
+
+function removePoint(p) {
+    var l;
+    for (var x=0; x<data[0].length; x++)
+    {
+        if (x < p)
+            removeLine([x,p]);
+        else if (x > p)
+            removeLine([p,x]);
+    }
+
+    if (p == data[0].length-1)
+        data[0].splice(data[0].length-1, 1);
+    else
+    {
+        var old = data[0][data[0].length-1];
+        data[0][p] = old;
+        renameLines(data[0].length-1, p);
+        data[0].splice(data[0].length-1,1);
+    }
+    
+}
+
 function init() {
     data = 
     [
@@ -539,6 +587,17 @@ function handleMouseClick(e) {
             data[0].push([mx, my, currentKeysDown[16]]);
 
             return;
+        } else if (currentKeysDown[18]) {
+            var mx = (e.offsetX-cx)/sx;
+            var my = (e.offsetY-cy)/sy;
+            for (var i=0; i<data[0].length; i++)
+            {
+                if ((Math.abs(data[0][i][0]-mx) <= RADIUS/2.0/sx) && (Math.abs(data[0][i][1]-my) <= RADIUS/2.0/Math.abs(sy)))
+                {
+                    removePoint(i);
+                    return;
+                }
+            }
         }
     } else 
     {
