@@ -182,6 +182,8 @@ function initProcessLinesAndPoints() {
         if (data[1][i][0] == data[1][i][1])
             continue;
 
+        if (data[0][data[1][i][0]][2] && data[0][data[1][i][1]][2]) continue;
+
         if (data[1][i][0] < data[1][i][1])
             lines[data[1][i][0]+" "+data[1][i][1]] = true;
         else
