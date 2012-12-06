@@ -104,11 +104,618 @@ function createKempeLinkage(a,b,terms){
     return [linkage_pts,linkage_edges];
 }
 
+function createOptimizedKempeLinkage(a, b, terms)
+{
+    var pts = [[0,0,true], normalize(a).concat(false), normalize(b).concat(false),
+        [1,0,true], [2,0,true], [4,0,true]];
+    var lines = [[0,1],[0,2]];
+    var maxa = 0; var mina = 0;
+    var maxb = 0; var minb = 0;
+    var apos = [1], aneg, bpos = [2], bneg;
+    var shift;
+    var finalpts = [];
+    for (var x=0; x<terms.length; x++)
+    {
+        if (terms[x][1] > maxa) maxa = terms[x][1];
+        if (terms[x][1] < mina) mina = terms[x][1];
+        if (terms[x][2] > maxb) maxb = terms[x][2];
+        if (terms[x][2] < minb) minb = terms[x][2];
+    }
+    var p;
+
+    if (maxa>1 || mina<0)
+    {
+        shift = pts.length;
+        p = createOptimizedMultiplier(pts[1], maxa, mina);
+
+        // console.log(p);
+        for (var x=p[2].length-1; x>=0; x--)
+            p[0].splice(p[2][x], 1);
+
+        pts = pts.concat(p[0]);
+        for (var x=0; x<p[1].length; x++)
+        {
+            // console.log(p[1][x][0], p[1][x][1]);
+            var a = p[1][x][0];
+            if (a == 0) a = 0;
+            else if (a == 1) a = 1;
+            else if (a == 2) a = 3;
+            else if (a == 3) a = 4;
+            else if (a == 4) a = 5;
+            else
+            {
+                for (var y=p[2].length-1; y>=0; y--)
+                {
+                    if (a>p[2][y]+5)
+                    {
+                        a -= y+1;
+                        break;
+                    }
+                }
+                a += shift-5;
+            }
+            p[1][x][0] = a;
+
+            a = p[1][x][1];
+            if (a == 0) a = 0;
+            else if (a == 1) a = 1;
+            else if (a == 2) a = 3;
+            else if (a == 3) a = 4;
+            else if (a == 4) a = 5;
+            else
+            {
+                for (var y=p[2].length-1; y>=0; y--)
+                {
+                    if (a>p[2][y]+5)
+                    {
+                        a -= y+1;
+                        break;
+                    }
+                }
+                a += shift-5;
+            }
+            p[1][x][1] = a;
+
+            // console.log('>',p[1][x][0], p[1][x][1]);
+        }
+
+        for (var x=0; x<p[3].length; x++)
+        {
+            var a = p[3][x]
+            if (a==1 || a==2) a = 1;
+            else
+            {
+                for (var y=p[2].length-1; y>=0; y--)
+                {
+                    if (a>p[2][y]+5)
+                    {
+                        a -= y+1;
+                        break;
+                    }
+                }
+                a += shift-5;
+            }
+            p[3][x] = a;
+        }
+
+        for (var x=0; x<p[4].length; x++)
+        {
+            var a = p[4][x]
+            if (a==1 || a==2) a = 1;
+            else
+            {
+                for (var y=p[2].length-1; y>=0; y--)
+                {
+                    if (a>p[2][y]+5)
+                    {
+                        a -= y+1;
+                        break;
+                    }
+                }
+                a += shift-5;
+            }
+            p[4][x] = a;
+        }
+
+        apos = p[3];
+        aneg = p[4];
+
+        lines = lines.concat(p[1]);
+    }
+    
+    if (maxb>1 || minb<0)
+    {
+        shift = pts.length;
+        p = createOptimizedMultiplier(pts[2], maxb, minb);
+
+        // console.log(p);
+        for (var x=p[2].length-1; x>=0; x--)
+            p[0].splice(p[2][x], 1);
+
+        pts = pts.concat(p[0]);
+        for (var x=0; x<p[1].length; x++)
+        {
+            // console.log(p[1][x][0], p[1][x][1]);
+            var a = p[1][x][0];
+            if (a == 0) a = 0;
+            else if (a == 1) a = 2;
+            else if (a == 2) a = 3;
+            else if (a == 3) a = 4;
+            else if (a == 4) a = 5;
+            else
+            {
+                for (var y=p[2].length-1; y>=0; y--)
+                {
+                    if (a>p[2][y]+5)
+                    {
+                        a -= y+1;
+                        break;
+                    }
+                }
+                a += shift-5;
+            }
+            p[1][x][0] = a;
+
+            a = p[1][x][1];
+            if (a == 0) a = 0;
+            else if (a == 1) a = 1;
+            else if (a == 2) a = 3;
+            else if (a == 3) a = 4;
+            else if (a == 4) a = 5;
+            else
+            {
+                for (var y=p[2].length-1; y>=0; y--)
+                {
+                    if (a>p[2][y]+5)
+                    {
+                        a -= y+1;
+                        break;
+                    }
+                }
+                a += shift-5;
+            }
+            p[1][x][1] = a;
+
+            // console.log('>',p[1][x][0], p[1][x][1]);
+        }
+
+        for (var x=0; x<p[3].length; x++)
+        {
+            var a = p[3][x]
+            if (a==1 || a==2) a = 2;
+            else
+            {
+                for (var y=p[2].length-1; y>=0; y--)
+                {
+                    if (a>p[2][y]+5)
+                    {
+                        a -= y+1;
+                        break;
+                    }
+                }
+                a += shift-5;
+            }
+            p[3][x] = a;
+        }
+
+        for (var x=0; x<p[4].length; x++)
+        {
+            var a = p[4][x]
+            if (a==1 || a==2) a = 2;
+            else
+            {
+                for (var y=p[2].length-1; y>=0; y--)
+                {
+                    if (a>p[2][y]+5)
+                    {
+                        a -= y+1;
+                        break;
+                    }
+                }
+                a += shift-5;
+            }
+            p[4][x] = a;
+        }
+
+        bpos = p[3];
+        bneg = p[4];
+
+        lines = lines.concat(p[1]);
+    }
+    
+    console.log(maxa, mina, maxb, minb);
+    console.log(apos, bpos, aneg, bneg);
+
+    var aindex, bindex;
+    // now we do the additors
+    for (var ii=0; ii<terms.length; ii++)
+    {
+        // angle a multiplier = 0
+        if (terms[ii][1] == 0)
+        {
+            if (terms[ii][2]>0)
+                bindex = bpos[terms[ii][2]-1];
+            else
+                bindex = bneg[-terms[ii][2]-1];
+            if (terms[ii][3] != 0) // additional angle
+            {
+                var tang = Math.atan2(pts[bindex][1], pts[bindex][0]);
+                tang += terms[ii][3];
+                pts.push([Math.cos(tang), Math.sin(tang), false]);
+                lines.push([0, pts.length-1]);
+                lines.push([bindex, pts.length-1]);
+                bindex = pts.length-1;
+            }
+            if (terms[ii][0] != 1)
+            {
+                var ap = pts[bindex];
+                pts.push([ap[0]*terms[ii][0], ap[1]*terms[ii][0], false]);
+                lines.push([0, pts.length-1]);
+                lines.push([bindex, pts.length-1]);
+                bindex = pts.length-1;
+            }
+            finalpts.push(bindex);
+        } else if (terms[ii][2] == 0) // angle b multiplier = 0
+        {
+            if (terms[ii][1]>0)
+                aindex = apos[terms[ii][1]-1];
+            else
+                aindex = aneg[-terms[ii][1]-1];
+            if (terms[ii][3] != 0) // additional angle
+            {
+                var tang = Math.atan2(pts[aindex][1], pts[aindex][0]);
+                tang += terms[ii][3];
+                pts.push([Math.cos(tang), Math.sin(tang), false]);
+                lines.push([0, pts.length-1]);
+                lines.push([aindex, pts.length-1]);
+                aindex = pts.length-1;
+            }
+            if (terms[ii][0] != 1)
+            {
+                var ap = pts[aindex];
+                pts.push([ap[0]*terms[ii][0], ap[1]*terms[ii][0], false]);
+                lines.push([0, pts.length-1]);
+                lines.push([aindex, pts.length-1]);
+                aindex = pts.length-1;
+            }
+            finalpts.push(aindex);
+        } else // both multipliers non-zero
+        {
+            if (terms[ii][2]>0)
+                bindex = bpos[terms[ii][2]-1];
+            else
+                bindex = bneg[-terms[ii][2]-1];
+            if (terms[ii][1]>0)
+                aindex = apos[terms[ii][1]-1];
+            else
+                aindex = aneg[-terms[ii][1]-1];
+            var additor = createALinkage(pts[0], pts[aindex], pts[bindex], terms[ii][3], terms[ii][0]);
+            additor[0].splice(0,3);
+            shift = pts.length-3;
+            var p1_pos = aindex;
+            var p2_pos = bindex;
+            for(var i = 0; i < additor[1].length; i++){
+              var newp1 = additor[1][i][0];
+              var newp2 = additor[1][i][1];
+              if(newp1 != 0){
+                  if (newp1 == 1){
+                      newp1 = p1_pos;
+                  }
+                  else if(newp1 == 2){
+                      newp1 = p2_pos;
+                  }
+                  else{
+                      newp1 = shift + newp1;
+                  }
+              }
+              if(newp2 != 0){
+                  if (newp2 == 1){
+                      newp2 = p1_pos;
+                  }
+                  else if(newp2 == 2){
+                      newp2 = p2_pos;
+                  }
+                  else{
+                      newp2 = shift + newp2;
+                  }
+              }
+              additor[1][i][0] = newp1;
+              additor[1][i][1] = newp2;
+            }
+            pts = pts.concat(additor[0]);
+            lines = lines.concat(additor[1]);
+            finalpts.push(pts.length-1);
+        }
+    }
+
+    var root = [0,0,true];
+    var ts = pts.length;
+    var pt1 = pts[finalpts[0]];
+    var pt1_i = finalpts[0];
+    for( var l = 1; l < finalpts.length; l++){
+        pts.push([0,0,false]);
+        //alert(JSON.stringify(pts));
+    }
+    
+    //alert(JSON.stringify(pts));
+    for ( var k = 1; k < finalpts.length; k++){
+        var c_i = finalpts[k];
+        var c_pt = pts[c_i];
+        var A = c_pt;
+        var B = root;
+        var C = pt1;
+        var i1 = c_i;
+        var i2 = pt1_i;
+        for( var i = 1; i <= k; i++){
+            if(i == k){
+                //alert(JSON.stringify(pts));
+                var n_pt = findThirdPt(A,B,C);
+                pts[k-1+ts] = [n_pt[0],n_pt[1],false];
+                lines.push([k-1+ts,i1,1],[k-1+ts,i2,1]);
+            }
+            else{
+                //alert(JSON.stringify(pts));
+                var n_pt = findThirdPt(A,B,C);
+                pts.push([n_pt[0],n_pt[1],false]);
+                lines.push([pts.length-1,i1,1],[pts.length-1,i2,1]);
+                A = n_pt;
+                i1 = pts.length-1;
+                i2 = ts + i-1; 
+                B = C;
+                C = pts[ts + i-1];
+                //alert(JSON.stringify(pts));
+            }
+        }
+    }
+
+
+    pts.push([pts[1][0]+pts[2][0], pts[1][1]+pts[2][1], false]);
+    lines.push([1,pts.length-1]);
+    lines.push([2,pts.length-1]);
+
+    return [pts, lines];
+}
+
+// 0 = root
+// 1 = first point, normalized
+// 2 = fixed point 1
+// 3 = fixed point 2
+// 4 = fixed point 4
+// 5x = angle point len 1
+// 8 - repeat, discard
+function createOptimizedMultiplier(pp, max, min)
+{
+    var pts = [];
+    var edges = [];
+    var pl, pl2, p;
+    var ind;
+    var toremove = [];
+    var keypointspos = [1];
+    var keypointsneg = [];
+    var ang = Math.atan2(pp[1], pp[0]);
+    console.log(ang, pp[0], pp[1]);
+    if (max > 1)
+    {
+        for (var i=2; i<=max; i++)
+        {
+            var cang1 = ang*(i);
+            var cang2 = ang*(i-1);
+            var cang3 = ang*(i-2);
+            // special implementation for first one
+            if (i==2)
+            {
+                pts.push([Math.cos(cang1), Math.sin(cang1), false]);
+                keypointspos.push(pts.length-1+5);
+                pts.push([Math.cos(cang2)*2, Math.sin(cang2)*2, false]);
+
+                pl = pts[pts.length-2];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                pts.push([Math.cos(cang3)*4, Math.sin(cang3)*4, true]);
+
+                pl = pts[pts.length-3];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                ind = 5*(i-1);
+                edges.push([0, ind]);
+                edges.push([0, ind+1]);
+                edges.push([1, ind+1]);
+                edges.push([ind, ind+2]);
+                edges.push([ind+1, ind+2]);
+                edges.push([ind+1, ind+4]);
+                edges.push([ind+2, ind+4]);
+                edges.push([4, ind+4]);
+                toremove.push(3);
+            } else
+            {
+                pts.push([Math.cos(cang1), Math.sin(cang1), false]);
+                keypointspos.push(pts.length-1+5);
+                pts.push([Math.cos(cang2)*2, Math.sin(cang2)*2, false]);
+
+                pl = pts[pts.length-2];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                pts.push([Math.cos(cang3)*4, Math.sin(cang3)*4, false]);
+
+                pl = pts[pts.length-3];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                ind = 5*(i-1);
+                edges.push([0,      ind]);
+                edges.push([0,      ind+1]);
+                edges.push([ind-5,  ind+1]);
+                edges.push([ind,    ind+2]);
+                edges.push([ind+1,  ind+2]);
+
+                edges.push([0,      ind+3]);
+                edges.push([ind-4,  ind+3]);
+                edges.push([ind+1,  ind+4]);
+                edges.push([ind+2,  ind+4]);
+                edges.push([ind+3,  ind+4]);
+            }
+        }
+        ind = 5*max;
+    } else ind = 5;
+
+
+    if (min<0)
+    {
+        for (var i=-1; i>=min; i--)
+        {
+            var cang1 = ang*(i+2);
+            var cang2 = ang*(i+1);
+            var cang3 = ang*(i);
+            // special implementation for first two
+            if (i==-1)
+            {
+                pts.push([pp[0], pp[1], false]);
+                toremove.push(pts.length-1);
+                pts.push([2, 0, true]);
+                toremove.push(pts.length-1);
+
+                pl = pts[pts.length-2];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+
+                pts.push([Math.cos(cang3)*4, Math.sin(cang3)*4, false]);
+                keypointsneg.push(pts.length-1+5);
+
+                pl = pts[pts.length-3];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                edges.push([1,  ind+2]);
+                edges.push([3,  ind+2]);
+                edges.push([0,  ind+3]);
+                edges.push([3,  ind+4]);
+                edges.push([ind+2,  ind+4]);
+                edges.push([ind+3,  ind+4]);
+            } else if (i == -2)
+            {
+                pts.push([Math.cos(cang1), Math.sin(cang1), false]);
+                toremove.push(pts.length-1);
+                pts.push([Math.cos(cang2)*2, Math.sin(cang2)*2, false]);
+
+                pl = pts[pts.length-2];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                pts.push([Math.cos(cang3)*4, Math.sin(cang3)*4, false]);
+                keypointsneg.push(pts.length-1+5);
+
+                pl = pts[pts.length-3];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                edges.push([0,      ind+1]);
+                edges.push([ind-2,  ind+1]);
+                edges.push([2,      ind+2]);
+                edges.push([ind+1,  ind+2]);
+
+                edges.push([0,      ind+3]);
+                edges.push([ind+1,  ind+4]);
+                edges.push([ind+2,  ind+4]);
+                edges.push([ind+3,  ind+4]);
+            } else
+            {
+                pts.push([Math.cos(cang1), Math.sin(cang1), false]);
+                pts.push([Math.cos(cang2)*2, Math.sin(cang2)*2, false]);
+
+                pl = pts[pts.length-2];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                pts.push([Math.cos(cang3)*4, Math.sin(cang3)*4, false]);
+                keypointsneg.push(pts.length-1+5);
+
+                pl = pts[pts.length-3];
+                pl2 = pts[pts.length-1];
+                p = reflect(pl[0]+pl2[0], pl[1]+pl2[1], pl[0], pl[1], pl2[0], pl2[1]);
+                pts.push([p[0], p[1], false]);
+
+                edges.push([0,      ind]);
+                edges.push([0,      ind+1]);
+                edges.push([ind-4,  ind]);
+                edges.push([ind-2,  ind+1]);
+                edges.push([ind,    ind+2]);
+                edges.push([ind+1,  ind+2]);
+
+                edges.push([0,      ind+3]);
+                edges.push([ind+1,  ind+4]);
+                edges.push([ind+2,  ind+4]);
+                edges.push([ind+3,  ind+4]);
+            }
+            ind +=5;
+        }
+    }
+
+    for (var i=keypointsneg.length; i>0; i--)
+    {
+        if (i==keypointsneg.length)
+        {
+            var cang1 = ang*(-i);
+            pts.push([Math.cos(cang1), Math.sin(cang1), false]);
+            edges.push([0, pts.length-1+5]);
+            edges.push([keypointsneg[i-1], pts.length-1+5]);
+            keypointsneg[i-1] = pts.length-1+5;
+        } else if (i==keypointsneg.length-1)
+        {
+            var cang1 = ang*(-i);
+            pts.push([Math.cos(cang1), Math.sin(cang1), false]);
+            edges.push([0, pts.length-1+5]);
+            edges.push([keypointsneg[i-1]+3, pts.length-1+5]);
+            keypointsneg[i-1] = pts.length-1+5;
+        } else
+        {
+            keypointsneg[i-1] += 7;
+        }
+    }
+
+    return [pts, edges, toremove, keypointspos, keypointsneg];
+}
+
 //Used in making translator linkages
 function findThirdPt(pA,pB,pC){
     dx = pC[0] - pB[0];
     dy = pC[1] - pB[1];
     return [pA[0]+dx,pA[1]+dy];
+}
+
+function createPLinkage(x, y, l)
+{
+    var r = l/3.0;
+    pts = [
+        [x-3*r, y, true],
+        [x-2*r, y, true],
+        [x-r, y, false],
+        [x-r/2, y+r*1.5, false],
+        [x-r/2, y-r*1.5, false],
+        [x, y, false]
+        ];
+    lns = [
+        [1,2],
+        [0,3],
+        [0,4],
+        [3,5],
+        [4,5],
+        [2,3],
+        [2,4]
+    ];
+    return [pts, lns];
 }
 
 /*

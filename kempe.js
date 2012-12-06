@@ -177,6 +177,7 @@ function createPhysicsWorld() {
 
 function initProcessLinesAndPoints() {
     lines = {};
+    console.log(data);
     for (var i=0; i<data[1].length; i++)
     {
         if (data[1][i][0] == data[1][i][1])
@@ -393,13 +394,20 @@ function init() {
     parent = createParent(1,1,1);
     //document.write(JSON.stringify(parent));
     terms = [
-                [12.3,2,2,Math.PI/2]
-                   , [6,1,1,Math.PI/2]
+                [5.3,5,0,Math.PI/2]
+                ,   [5.3,3,3,Math.PI/2]
+                ,   [5.3,4,4,Math.PI/2]
+                   , [6,0,-2,Math.PI/2]
                 // , [5,1,0,0]
                 // , [5,0,0,Math.PI/1.2]
             ];
     mul = createKempeLinkage(1,1,terms);
     data = data1;
+
+    var d = createOptimizedKempeLinkage([4,8],[8,4],terms);
+    data = d;
+
+    data = createPLinkage(0,0,10);
     // data[0].push([0,0]);
     // data[0].push([8,4]);
     // data[0].push([4,8]);

@@ -259,6 +259,130 @@ Equation.prototype.isnum = function() {
     return this.num() !== undefined;
 }
 
+Equation.prototype.simp = function(vars) {
+    var res = [0];
+    var t;
+    var r;
+    var bb;
+    for (var i=0; i<this.e.length; i++)
+    {
+        bb = false;
+        r = [];
+        t = this.e[i];
+        r.push(t.c);
+        for (var j=0; j<vars.length; j++)
+        {
+            var power = t.p[vars[j]];
+            if (power)
+            {
+                bb = true;
+                r.push(power);
+            } else
+                r.push(0);
+        }
+        if (bb)
+            res.push(r);
+        else
+            res[0] += r[0];
+    }
+    return res;
+}
+
+function generateFunction(eval) {
+    return function(x,y) {
+        var ans = eval[0];
+        for (var i=1; i<eval.length; i++)
+            ans += eval[i][0]*Math.pow(x,eval[i][1])*Math.pow(y,eval[i][2]);
+        return ans;
+    }
+}
+
+Equation.prototype.genFuncs = function() {
+    var funcs = [];
+
+    var f = this.simp(['x','y']);
+    funcs.push(generateFunction(f));
+    console.log(f);
+
+    var fx = f.slice();
+    for (var i=1; i<fx.length; i++)
+    {
+        fx[i] = f[i].slice();
+        if (fx[i][1] > 0)
+        {
+            fx[i][0] *= fx[i][1];
+            fx[i][1] -= 1;
+        } else
+        {
+            fx[i][0] = 0;
+        }
+    }
+    funcs.push(generateFunction(fx));
+
+    var fxx = fx.slice();
+    for (var i=1; i<fxx.length; i++)
+    {
+        fxx[i] = fx[i].slice();
+        if (fxx[i][1] > 0)
+        {
+            fxx[i][0] *= fxx[i][1];
+            fxx[i][1] -= 1;
+        } else
+        {
+            fxx[i][0] = 0;
+        }
+    }
+    funcs.push(generateFunction(fxx));
+
+    var fy = f.slice();
+    for (var i=1; i<fy.length; i++)
+    {
+        fy[i] = f[i].slice();
+        if (fy[i][2] > 0)
+        {
+            fy[i][0] *= fy[i][2];
+            fy[i][2] -= 1;
+        } else
+        {
+            fy[i][0] = 0;
+        }
+    }
+    funcs.push(generateFunction(fy));
+
+    var fyy = fy.slice();
+    for (var i=1; i<fyy.length; i++)
+    {
+        fyy[i] = fy[i].slice();
+        if (fyy[i][2] > 0)
+        {
+            fyy[i][0] *= fyy[i][2];
+            fyy[i][2] -= 1;
+        } else
+        {
+            fyy[i][0] = 0;
+        }
+    }
+    funcs.push(generateFunction(fyy));
+
+    var fxy = fx.slice();
+    for (var i=1; i<fxy.length; i++)
+    {
+        fxy[i] = fx[i].slice();
+        if (fxy[i][2] > 0)
+        {
+            fxy[i][0] *= fxy[i][2];
+            fxy[i][2] -= 1;
+        } else
+        {
+            fxy[i][0] = 0;
+        }
+    }
+    funcs.push(generateFunction(fxy));
+
+
+    return funcs;
+}
+
 Function.prototype.str = function() {
     s = n.name+"(";
     if (s.e.length > 0)
@@ -535,7 +659,52 @@ var cas = {
                         .evalequ('y',createEquation("c+d"))));
 
         
+        var e4 = createEquation("x^2+y^2+xy");
+        console.log(e4);
+        var funcs = e4.genFuncs();
+        console.log('f');
+        console.log(funcs[0](1,2));
+        console.log(funcs[0](0,2));
+        console.log(funcs[0](2,0));
+        console.log(funcs[0](1,3));
+        console.log(funcs[0](4,6));
+
+        console.log('fx');
+        console.log(funcs[1](1,2));
+        console.log(funcs[1](0,2));
+        console.log(funcs[1](2,0));
+        console.log(funcs[1](1,3));
+        console.log(funcs[1](4,6));
+
+        console.log('fxx');
+        console.log(funcs[2](1,2));
+        console.log(funcs[2](0,2));
+        console.log(funcs[2](2,0));
+        console.log(funcs[2](1,3));
+        console.log(funcs[2](4,6));
+
+        console.log('fy');
+        console.log(funcs[3](1,2));
+        console.log(funcs[3](0,2));
+        console.log(funcs[3](2,0));
+        console.log(funcs[3](1,3));
+        console.log(funcs[3](4,6));
+
+        console.log('fyy');
+        console.log(funcs[4](1,2));
+        console.log(funcs[4](0,2));
+        console.log(funcs[4](2,0));
+        console.log(funcs[4](1,3));
+        console.log(funcs[4](4,6));
+
+        console.log('fxy');
+        console.log(funcs[5](1,2));
+        console.log(funcs[5](0,2));
+        console.log(funcs[5](2,0));
+        console.log(funcs[5](1,3));
+        console.log(funcs[5](4,6));
+
     }
 }
 
-// cas.test();
+cas.test();
