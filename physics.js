@@ -219,6 +219,17 @@ function evalForces3(data, fi, fx, fy) {
             jd[i][mm*2+1] =  p[e[i][1]][4] - p[e[i][0]][4];
         }
     }
+    //curve constraint
+    
+    
+    //j.push([0,0,0,0,p[3][1],p[3][0]]);
+    //jd.push([0,0,0,0,p[3][4],p[3][3]]);
+    
+    //circle
+    j.push([0,0,0,0,2*p[3][0], 2*p[3][1]]);
+    jd.push([0,0,0,0,2*p[3][3], 2*p[3][4]]);
+    
+
 
 
     var node;
@@ -229,6 +240,16 @@ function evalForces3(data, fi, fx, fy) {
         var dy = p[e[i][0]][1] - p[e[i][1]][1];
         c.push(dx*dx+dy*dy-e[i][2]*e[i][2]);
     }
+
+    // curve constraint
+    //c.push(p[3][0] * p[3][1] - 1);
+	 //circle
+    c.push(p[3][0]*p[3][0] + p[3][1]*p[3][1] - 1);
+
+
+
+	
+
     var cdot = [];
     for (var i=0; i<e.length; i++)
     {
@@ -239,11 +260,15 @@ function evalForces3(data, fi, fx, fy) {
         }
         cdot.push(val);
     }
+    // curve constraint
+    //cdot.push(p[3][1]*p[3][3] + p[3][0]*p[3][4]);
+    //circle
+    cdot.push(2*p[3][0]*p[3][3] + 2*p[3][1]*p[3][4]);
 
     var w = 1;
 
     var num = [];
-    for (var i=0; i<e.length; i++)
+    for (var i=0; i<(e.length+1); i++)
     {
         var val = 0;
         for (var ii=0; ii<m.length; ii++)
@@ -259,10 +284,274 @@ function evalForces3(data, fi, fx, fy) {
 
     var lambda;
 
-    if (numeric.det(jjt) > 0.000001)
+    if (numeric.det(jjt) > 0.000001) {
         lambda = numeric.solve(jjt, num);
-    else 
+    } else  {
         lambda = conjugategrad(jjt, num);
+    }
+
+    // var lambda = numeric.solve(jjt, num);
+    // var lambda = conjugategrad(jjt, num);
+    // var xsol = [];
+    // for (var i=0; i<num.length; i++)
+    //     xsol.push([0]);
+    // var lambda = jStat.SOR(jjt, num, xsol, 0.01, 1);
+    // if (ccccc++<10)
+    // {
+    //     console.log(j);
+    //     console.log(qf);
+    //     console.log(c);
+    //     console.log(lambda);
+    //     console.log(numeric.det(jjt));
+    // }
+
+    var jtl = numeric.dot(jt, lambda);
+
+    for (var i=0; i<qf.length; i++)
+        qf[i] += jtl[i];
+
+
+    var f = [];
+    for (var i=0; i<p.length; i++)
+    {
+        if (p[i][2])
+        {
+            f.push([0,0,true,0,0]);
+        } else
+        {
+            f.push([p[i][3], p[i][4], false, qf[mr[i]*2], qf[mr[i]*2+1]]);
+        }
+    }
+    return f;
+}
+
+
+function F(x, y) {
+	// circle
+	//return x*x + y*y - 1;	
+
+	// ellipse
+	//return (x*x)/4 + y*y - 1;
+
+	// rotated ellipse
+	//return x*x + x*y + y*y - 1;
+
+	// squarish circle
+	//return x*x*x*x + y*y*y*y - 1;
+
+	// conchoid
+	return (x - 1) * (x*x + y*y) + 3*x*x;
+}
+
+function Fx(x, y) {
+	// circle
+	//return 2*x;
+
+
+	// ellipse
+	//return x/2;
+
+	// rotated ellipse
+	//return 2 * x + y;
+
+	// squarish circle
+	//return 4*x*x*x;
+
+	// conchoid
+	return 3*x*x + 4*x + y*y;
+}
+
+function Fy(x, y) {
+	// circle
+	//return 2*y;
+
+	// ellipse
+	//return y/2;
+
+	// rotated ellipse
+	//return 2*y + x;
+
+	// squarish circle
+	//return 4*y*y*y;
+
+	// conchoid
+	return 2*(x-1)*y;
+}
+
+function Fxx(x, y) {
+	// rotated ellipse
+	//return 2;
+
+	//squarish circle
+	//return 12*x*x;
+
+	// conchoid
+	return 6*x + 4;
+
+}
+
+function Fxy(x, y) {
+	// rotated ellipse
+	//return 1;
+
+	// squarish circle
+	//return 0;
+
+	// conchoid
+	return 2*y;
+}
+
+function Fyy(x, y) {
+	// rotated ellipse
+	//return 2;
+
+	//squarish circle
+	//return 12*y*y;
+
+	// conchoid
+	return 2*(x-1);
+}
+
+
+
+
+function pgramForces(pgram, fi, fx, fy) {
+    var flen = Math.sqrt(fx*fx+fy*fy);
+    /*
+
+    if (flen > 0.1)
+    {
+        fx = fx/flen;
+        fy = fy/flen;
+    }
+    flen = Math.min(flen, 10);
+    fx *= .5;
+    fy *= .5;
+    */
+
+    var p = data[0];
+    var e = data[1];
+
+    var m = [];
+    var mr = [];
+    var mi = 0;
+    for (var i=0; i<p.length; i++)
+    {
+        if (!p[i][2])
+        {
+            mr.push(m.length);
+            m.push(i);
+        } else mr.push(-1);
+    }
+
+    var qf = [];
+    for (var i=0; i<m.length; i++)
+    {
+        qf.push(p[m[i]][3]*(-5));
+        qf.push(p[m[i]][4]*(-5));
+    }
+    
+    qf[mr[fi]*2] += fx;
+    qf[mr[fi]*2+1] += fy;
+
+    var j = [];
+    var jd = [];
+    for (var i=0; i<e.length; i++)
+    {
+        j.push([]);
+        jd.push([]);
+        for (var ii=0; ii<m.length; ii++)
+        {
+            j[i].push(0);
+            j[i].push(0);
+            jd[i].push(0);
+            jd[i].push(0);
+        }
+        if (!p[e[i][0]][2])
+        {
+            var mm = mr[e[i][0]];
+            j[i][mm*2]   = p[e[i][0]][0] - p[e[i][1]][0];
+            j[i][mm*2+1] = p[e[i][0]][1] - p[e[i][1]][1];
+            jd[i][mm*2]   = p[e[i][0]][3] - p[e[i][1]][3];
+            jd[i][mm*2+1] = p[e[i][0]][4] - p[e[i][1]][4];
+        }
+        if (!p[e[i][1]][2])
+        {
+            var mm = mr[e[i][1]];
+            j[i][mm*2]   =  p[e[i][1]][0] - p[e[i][0]][0];
+            j[i][mm*2+1] =  p[e[i][1]][1] - p[e[i][0]][1];
+            jd[i][mm*2]   =  p[e[i][1]][3] - p[e[i][0]][3];
+            jd[i][mm*2+1] =  p[e[i][1]][4] - p[e[i][0]][4];
+        }
+    }
+    //curve constraint
+    
+    
+    j.push([0,0,0,0,Fx(p[3][0], p[3][1]), Fy(p[3][0], p[3][1])]);
+    jd.push([0,0,0,0,Fxx(p[3][0], p[3][1])*p[3][3] +Fxy(p[3][0], p[3][1])*p[3][4], Fyy(p[3][0], p[3][1])*p[3][4] + Fxy(p[3][0], p[3][1])*p[3][3]]);
+    
+
+
+
+    var node;
+    var c = [];
+    for (var i=0; i<e.length; i++)
+    {
+        var dx = p[e[i][0]][0] - p[e[i][1]][0];
+        var dy = p[e[i][0]][1] - p[e[i][1]][1];
+        c.push(dx*dx+dy*dy-e[i][2]*e[i][2]);
+    }
+
+    // curve constraint
+    //c.push(p[3][0] * p[3][1] - 1);
+	 //circle
+    c.push(F(p[3][0], p[3][1]));
+
+
+
+	
+
+    var cdot = [];
+    for (var i=0; i<e.length; i++)
+    {
+        var val = 0;
+        for (var ii=0; ii<m.length; ii++)
+        {
+            val += j[i][ii*2]*p[m[ii]][3] + j[i][ii*2+1]*p[m[ii]][4];
+        }
+        cdot.push(val);
+    }
+    // curve constraint
+    //cdot.push(p[3][1]*p[3][3] + p[3][0]*p[3][4]);
+    //circle
+    cdot.push(Fx(p[3][0], p[3][1])*p[3][3] + Fy(p[3][0], p[3][1])*p[3][4]);
+
+    var w = 1;
+
+    var num = [];
+    for (var i=0; i<(e.length+1); i++)
+    {
+        var val = 0;
+        for (var ii=0; ii<m.length; ii++)
+        {
+            val += jd[i][ii*2]*p[ii][3] + jd[i][ii*2+1]*p[ii][4];
+            val += j[i][ii*2]*qf[ii*2] + j[i][ii*2+1]*qf[ii*2+1];
+        }
+        num.push(-val  -15*c[i]  -20*cdot[i]);
+    }
+
+    var jt = numeric.transpose(j);
+    var jjt = numeric.dot(j,jt);
+
+    var lambda;
+
+    if (numeric.det(jjt) > 0.000001) {
+        lambda = numeric.solve(jjt, num);
+    } else  {
+	alert("noninvertible");
+        lambda = conjugategrad(jjt, num);
+    }
+
     // var lambda = numeric.solve(jjt, num);
     // var lambda = conjugategrad(jjt, num);
     // var xsol = [];
