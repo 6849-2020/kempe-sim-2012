@@ -326,7 +326,7 @@ function evalForces3(data, fi, fx, fy) {
 }
 
 
-function F(x, y) {
+var F = function(x, y) {
 	// circle
 	//return x*x + y*y - 1;	
 
@@ -343,7 +343,7 @@ function F(x, y) {
 	return (x - 1) * (x*x + y*y) + 3*x*x;
 }
 
-function Fx(x, y) {
+var Fx = function(x, y) {
 	// circle
 	//return 2*x;
 
@@ -361,7 +361,7 @@ function Fx(x, y) {
 	return 3*x*x + 4*x + y*y;
 }
 
-function Fy(x, y) {
+var Fy = function(x, y) {
 	// circle
 	//return 2*y;
 
@@ -378,7 +378,7 @@ function Fy(x, y) {
 	return 2*(x-1)*y;
 }
 
-function Fxx(x, y) {
+var Fxx = function (x, y) {
 	// rotated ellipse
 	//return 2;
 
@@ -390,7 +390,7 @@ function Fxx(x, y) {
 
 }
 
-function Fxy(x, y) {
+var Fxy = function (x, y) {
 	// rotated ellipse
 	//return 1;
 
@@ -401,7 +401,7 @@ function Fxy(x, y) {
 	return 2*y;
 }
 
-function Fyy(x, y) {
+var Fyy = function (x, y) {
 	// rotated ellipse
 	//return 2;
 
@@ -413,7 +413,16 @@ function Fyy(x, y) {
 }
 
 
-
+function physicsInit(equs)
+{
+    F = equs[0];
+    Fx = equs[1];
+    Fxx = equs[2];
+    Fy = equs[3];
+    Fyy = equs[4];
+    Fxy = equs[5];
+    console.log("physics initialized");
+}
 
 function pgramForces(pgram, fi, fx, fy) {
     var flen = Math.sqrt(fx*fx+fy*fy);
@@ -548,7 +557,9 @@ function pgramForces(pgram, fi, fx, fy) {
     if (numeric.det(jjt) > 0.000001) {
         lambda = numeric.solve(jjt, num);
     } else  {
-	alert("noninvertible");
+	// alert("noninvertible");
+
+    console.log("noninvertible");
         lambda = conjugategrad(jjt, num);
     }
 

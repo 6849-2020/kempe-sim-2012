@@ -1,7 +1,7 @@
 //FIX FIND LINE, REFLECT
  
  function createParent(a,b,l){
-    var points = [[0,0,true],[8,4,false],[4,8,false],[12,12,false]];
+    var points = [[0,0,true],[a[0],a[1],false],[b[0],b[1],false],[a[0]+b[0],a[1]+b[1],false]];
     var l = 4*Math.sqrt(5);
     var edges = [[0,1,l],[0,2,l],[1,3,l],[2,3,l]];
     return[points,edges];
@@ -101,10 +101,20 @@ function createKempeLinkage(a,b,terms){
 
         );
     // console.log([linkage_pts,linkage_edges]);
+    var xx = 0;
+    var yy = 0;
+    for (var x=0; x<final_term_links.length; x++)
+    {
+        xx += linkage_pts[final_term_links[x]][0];
+        yy += linkage_pts[final_term_links[x]][1];
+    }
+    linkage_pts.push([xx,yy, false]);
+    // fakecolor[""+(pts.length-1)] = 'black';
+
     return [linkage_pts,linkage_edges];
 }
 
-function createOptimizedKempeLinkage(a, b, terms)
+function createOptimizedKempeLinkage(a, b, terms, fakecolor)
 {
     var pts = [[0,0,true], normalize(a).concat(false), normalize(b).concat(false),
         [1,0,true], [2,0,true], [4,0,true]];
@@ -122,6 +132,9 @@ function createOptimizedKempeLinkage(a, b, terms)
         if (terms[x][2] < minb) minb = terms[x][2];
     }
     var p;
+
+    fakecolor[""+1] = "#d0b2ca";
+    fakecolor[""+2] = "#fd2850";
 
     if (maxa>1 || mina<0)
     {
@@ -323,8 +336,8 @@ function createOptimizedKempeLinkage(a, b, terms)
         lines = lines.concat(p[1]);
     }
     
-    console.log(maxa, mina, maxb, minb);
-    console.log(apos, bpos, aneg, bneg);
+    // console.log(maxa, mina, maxb, minb);
+    // console.log(apos, bpos, aneg, bneg);
 
     var aindex, bindex;
     // now we do the additors
@@ -436,6 +449,8 @@ function createOptimizedKempeLinkage(a, b, terms)
         pts.push([0,0,false]);
         //alert(JSON.stringify(pts));
     }
+
+    fakecolor[""+(pts.length-1)] = 'brown';
     
     //alert(JSON.stringify(pts));
     for ( var k = 1; k < finalpts.length; k++){
@@ -468,12 +483,26 @@ function createOptimizedKempeLinkage(a, b, terms)
         }
     }
 
+    var xx = 0;
+    var yy = 0;
+    for (var x=0; x<finalpts.length; x++)
+    {
+        xx += pts[finalpts[x]][0];
+        yy += pts[finalpts[x]][1];
+    }
+    pts.push([xx,yy, false]);
+    fakecolor[""+(pts.length-1)] = 'brown';
+
+    for (var i=0; i<finalpts.length; i++)
+        fakecolor[""+finalpts[i]] = Colors.rgb2hex(160, 180, 78)
 
     pts.push([pts[1][0]+pts[2][0], pts[1][1]+pts[2][1], false]);
     lines.push([1,pts.length-1]);
     lines.push([2,pts.length-1]);
 
-    return [pts, lines];
+    fakecolor[""+(pts.length-1)] = 'green';
+
+    return [pts, lines, finalpts];
 }
 
 // 0 = root
@@ -493,7 +522,7 @@ function createOptimizedMultiplier(pp, max, min)
     var keypointspos = [1];
     var keypointsneg = [];
     var ang = Math.atan2(pp[1], pp[0]);
-    console.log(ang, pp[0], pp[1]);
+    // console.log(ang, pp[0], pp[1]);
     if (max > 1)
     {
         for (var i=2; i<=max; i++)
@@ -946,7 +975,10 @@ function createALinkage(root, p1, p2, angle, length)
 {
     // console.log(root, p1, p2, angle, length)
     var mp = [p1[0]+p2[0], p1[1]+p2[1]];
-    mp = normalize(mp);
+    var ang1 = Math.atan2(p1[1],p1[0]);
+    var ang2 = Math.atan2(p2[1],p2[0]);
+    var angb = (ang1+ang2)/2;
+    mp = [Math.cos(angb), Math.sin(angb)];
 
     var pts = [
                 [root[0], root[1], false],

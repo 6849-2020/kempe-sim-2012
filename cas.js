@@ -302,9 +302,10 @@ Equation.prototype.genFuncs = function() {
 
     var f = this.simp(['x','y']);
     funcs.push(generateFunction(f));
-    console.log(f);
+    // console.log(f);
 
     var fx = f.slice();
+    fx[0] = 0;
     for (var i=1; i<fx.length; i++)
     {
         fx[i] = f[i].slice();
@@ -320,6 +321,7 @@ Equation.prototype.genFuncs = function() {
     funcs.push(generateFunction(fx));
 
     var fxx = fx.slice();
+    fxx[0] = 0
     for (var i=1; i<fxx.length; i++)
     {
         fxx[i] = fx[i].slice();
@@ -335,6 +337,7 @@ Equation.prototype.genFuncs = function() {
     funcs.push(generateFunction(fxx));
 
     var fy = f.slice();
+    fy[0] = 0;
     for (var i=1; i<fy.length; i++)
     {
         fy[i] = f[i].slice();
@@ -350,6 +353,7 @@ Equation.prototype.genFuncs = function() {
     funcs.push(generateFunction(fy));
 
     var fyy = fy.slice();
+    fyy[0] = 0;
     for (var i=1; i<fyy.length; i++)
     {
         fyy[i] = fy[i].slice();
@@ -365,6 +369,7 @@ Equation.prototype.genFuncs = function() {
     funcs.push(generateFunction(fyy));
 
     var fxy = fx.slice();
+    fxy[0] = 0;
     for (var i=1; i<fxy.length; i++)
     {
         fxy[i] = fx[i].slice();
@@ -521,10 +526,10 @@ function constructCosReporesentation(e) {
         if (coeff == 0) continue;
         var newterm = [coeff, parseInt(split[0]), 
                             parseInt(split[1]), 
-                            parseFloat(split[2])];
+                            parseFloat(split[2])*Math.PI];
         if (newterm[1] == 0 && newterm[2] == 0)
         {
-            terms[0] += Math.cos(newterm[2]*Math.PI)*coeff;
+            terms[0] += Math.cos(newterm[2])*coeff;
         } else
             terms.push(newterm);
     }
@@ -659,7 +664,7 @@ var cas = {
                         .evalequ('y',createEquation("c+d"))));
 
         
-        var e4 = createEquation("x^2+y^2+xy");
+        var e4 = createEquation("y-1");
         console.log(e4);
         var funcs = e4.genFuncs();
         console.log('f');
@@ -707,4 +712,4 @@ var cas = {
     }
 }
 
-cas.test();
+// cas.test();

@@ -19,6 +19,7 @@ var VIEW_TILE_HEIGHT = VIEW_HEIGHT/TILE_WIDTH;
 var VIEW_TILE_WIDTH_HALF = (VIEW_TILE_WIDTH/2)>>0;
 var VIEW_TILE_HEIGHT_HALF = (VIEW_TILE_HEIGHT/2)>>0;
 var data;
+var drawdata;
 var selected;
 var hilight;
 var dragging;
@@ -29,11 +30,14 @@ var RADIUS = 10;
 var cx, cy, sx, sy;
 var cmx, cmy;
 var lines = {};
+var equs;
 var world;
 var bodies;
 var mousejoint;
-var BOX2DPHYSICS = true;
+var BOX2DPHYSICS = false;
 var USEPHYSICS = true;
+var fakingit = true;
+var fakecolor = {};
 
 function kempeStart() {
     cvs = document.getElementById("graphics-canvas");
@@ -70,6 +74,8 @@ function kempeStart() {
     ctx.fillStyle = 'red';
 
     init();
+
+    initlinkage();
     tick();
 }
 
@@ -177,7 +183,7 @@ function createPhysicsWorld() {
 
 function initProcessLinesAndPoints() {
     lines = {};
-    console.log(data);
+    // console.log(data);
     for (var i=0; i<data[1].length; i++)
     {
         if (data[1][i][0] == data[1][i][1])
@@ -404,10 +410,12 @@ function init() {
     mul = createKempeLinkage(1,1,terms);
     data = data1;
 
-    var d = createOptimizedKempeLinkage([4,8],[8,4],terms);
+    var d = createOptimizedKempeLinkage([4,8],[8,4],terms, fakecolor);
     data = d;
 
     data = createPLinkage(0,0,10);
+
+    data = data3;
     // data[0].push([0,0]);
     // data[0].push([8,4]);
     // data[0].push([4,8]);
@@ -422,6 +430,10 @@ function init() {
 var LINE_BORDER_WIDTH = 4;
 var LINE_WIDTH = 3;
 function draw() {
+    if (fakingit)
+        dd = drawdata;
+    else
+        dd = data;
     if (window.innerWidth !== last_doc_width)
         recalcViewDimentions();
 
@@ -432,20 +444,20 @@ function draw() {
     ctx.strokeStyle = 'blue';
 
     
-    for (var i=0; i<data[1].length; i++)
+    for (var i=0; i<dd[1].length; i++)
     {
         ctx.lineWidth = LINE_BORDER_WIDTH;
         ctx.strokeStyle = 'black';
         ctx.beginPath();
-        ctx.moveTo(cx+sx*data[0][data[1][i][0]][0],cy+sy*data[0][data[1][i][0]][1]);
-        ctx.lineTo(cx+sx*data[0][data[1][i][1]][0],cy+sy*data[0][data[1][i][1]][1]);
+        ctx.moveTo(cx+sx*dd[0][dd[1][i][0]][0],cy+sy*dd[0][dd[1][i][0]][1]);
+        ctx.lineTo(cx+sx*dd[0][dd[1][i][1]][0],cy+sy*dd[0][dd[1][i][1]][1]);
         ctx.closePath();
         ctx.stroke();
         ctx.lineWidth = LINE_WIDTH;
         ctx.strokeStyle = 'blue';
         ctx.beginPath();
-        ctx.moveTo(cx+sx*data[0][data[1][i][0]][0],cy+sy*data[0][data[1][i][0]][1]);
-        ctx.lineTo(cx+sx*data[0][data[1][i][1]][0],cy+sy*data[0][data[1][i][1]][1]);
+        ctx.moveTo(cx+sx*dd[0][dd[1][i][0]][0],cy+sy*dd[0][dd[1][i][0]][1]);
+        ctx.lineTo(cx+sx*dd[0][dd[1][i][1]][0],cy+sy*dd[0][dd[1][i][1]][1]);
         ctx.closePath();
         ctx.stroke();
     }
@@ -455,9 +467,9 @@ function draw() {
         ctx.lineWidth = LINE_BORDER_WIDTH;
         ctx.strokeStyle = 'black';
         ctx.beginPath();
-        ctx.moveTo(cx+sx*data[0][line_start-1][0],cy+sy*data[0][line_start-1][1]);
+        ctx.moveTo(cx+sx*dd[0][line_start-1][0],cy+sy*dd[0][line_start-1][1]);
         if (hilight && hilight!==line_start)
-            ctx.lineTo(cx+sx*data[0][hilight-1][0],cy+sy*data[0][hilight-1][1]);
+            ctx.lineTo(cx+sx*dd[0][hilight-1][0],cy+sy*dd[0][hilight-1][1]);
         else
             ctx.lineTo(cx+sx*line_end[0],cy+sy*line_end[1]);
         ctx.closePath();
@@ -472,38 +484,120 @@ function draw() {
         } else
             ctx.strokeStyle = '#000066';
         ctx.beginPath();
-        ctx.moveTo(cx+sx*data[0][line_start-1][0],cy+sy*data[0][line_start-1][1]);
+        ctx.moveTo(cx+sx*dd[0][line_start-1][0],cy+sy*dd[0][line_start-1][1]);
         if (hilight && hilight!==line_start)
-            ctx.lineTo(cx+sx*data[0][hilight-1][0],cy+sy*data[0][hilight-1][1]);
+            ctx.lineTo(cx+sx*dd[0][hilight-1][0],cy+sy*dd[0][hilight-1][1]);
         else
             ctx.lineTo(cx+sx*line_end[0],cy+sy*line_end[1]);
         ctx.closePath();
         ctx.stroke();
     }
 
-    for (var i=data[0].length-1; i>=0; i--)
+    for (var i=dd[0].length-1; i>=0; i--)
     {
-
-        if (selected == i+1 || hilight == i+1 || line_start == i+1)
-            if (data[0][i][2])
+        if (!fakingit && (selected == i+1 || hilight == i+1 || line_start == i+1))
+            if (dd[0][i][2])
                 ctx.fillStyle = '#FF8888'
             else
                 ctx.fillStyle = '#88FF88';
         else
-            if (data[0][i][2])
+            if (dd[0][i][2])
                 ctx.fillStyle = 'red'
             else
-                ctx.fillStyle = 'green';
+                if (fakingit)
+                {
+                    var cccc = fakecolor[""+i];
+                    if (cccc == undefined)
+                        ctx.fillStyle = 'blue';
+                    else ctx.fillStyle = cccc;
+                }
+                else
+                    ctx.fillStyle = 'green';
         ctx.lineWidth = 1;
         ctx.strokeStyle = 'black';
         ctx.beginPath();
-        ctx.arc((cx+sx*data[0][i][0]), 
-                (cy+sy*data[0][i][1]), 
+        ctx.arc((cx+sx*dd[0][i][0]), 
+                (cy+sy*dd[0][i][1]), 
                 RADIUS/2, 0, Math.PI*2, true);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
     }
+
+    if (fakingit)
+    {
+        if (drawdata.length > 2)
+            for (var i=0; i<drawdata[2].length; i++)
+            {
+                // console.log(drawdata[2][i]);
+                ctx.fillStyle = fakecolor[""+drawdata[2][i]];
+
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'black';
+                ctx.beginPath();
+                ctx.arc((cx+sx*dd[0][drawdata[2][i]][0]), 
+                        (cy+sy*dd[0][drawdata[2][i]][1]), 
+                        RADIUS/2, 0, Math.PI*2, true);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+        for (var i=data[0].length-1; i>=0; i--)
+        {
+
+            if (selected == i+1 || hilight == i+1 || line_start == i+1)
+                if (data[0][i][2])
+                    ctx.fillStyle = '#FF8888'
+                else
+                    ctx.fillStyle = '#88FF88';
+            else
+                if (data[0][i][2])
+                    ctx.fillStyle = 'red'
+                else
+                {
+                    if (i==0)
+                        ctx.fillStyle = 'red';
+                    else if (i==1)
+                        ctx.fillStyle = Colors.rgb2hex(43, 145, 250);
+                    else if (i==2)
+                        ctx.fillStyle = Colors.rgb2hex(250, 145, 43);
+                    else
+                        ctx.fillStyle = 'green';
+                }
+                    
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.arc((cx+sx*data[0][i][0]), 
+                    (cy+sy*data[0][i][1]), 
+                    RADIUS/2, 0, Math.PI*2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+    }
+
+    ctx.fillStyle = 'green';
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'black';
+    ctx.beginPath();
+    ctx.arc((cx+sx*data[0][3][0]), 
+            (cy+sy*data[0][3][1]), 
+            RADIUS/2, 0, Math.PI*2, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = 'brown';
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'black';
+    ctx.beginPath();
+    ctx.arc((cx+sx*dd[0][dd[0].length-2][0]), 
+            (cy+sy*dd[0][dd[0].length-2][1]), 
+            RADIUS/2, 0, Math.PI*2, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
 }
 
 function toggleEditMode() {
@@ -547,26 +641,13 @@ function update() {
         // var forces = evalForces(data);
         // timeStep(data, forces, 0.1);
         
-
-        if (BOX2DPHYSICS)
+        if (fakingit)
         {
-            for (var i=0; i<bodies.length; i++)
-            {
-                var pos = bodies[i].GetPosition();
-                data[0][i][0] = pos.x;
-                data[0][i][1] = pos.y;
-                // console.log(pos);
-            }
-            world.Step(1 / 60, 10, 10);
-            world.ClearForces();
-        } else
-        {
-            count++;
             if (selected)
             {
                 var dx = cmx-data[0][selected-1][0];
                 var dy = cmy-data[0][selected-1][1];
-                var forces = evalForces3(data, selected-1, dx, dy);
+                var forces = pgramForces(data, selected-1, dx, dy);
                 // RK4step(data, forces, 0.1);
                 timeStep(data, forces, 0.1);
                 // if (count<=10)
@@ -576,11 +657,52 @@ function update() {
                 var i = 0;
                 for (i=0; i<data[0].length; i++)
                     if (!data[0][i][2]) break;
-                var forces = evalForces3(data, i, 0, 0);
+                var forces = pgramForces(data, i, 0, 0);
                 // RK4step(data, forces, 0.1);
                 timeStep(data, forces, 0.1);
                 // if (count<=10)
                 //     console.log(forces);
+            }
+            fakecolor = {};
+            drawdata = createOptimizedKempeLinkage(data[0][1], data[0][2],terms, fakecolor);
+            // drawdata = createKempeLinkage(normalize(data[0][1]),normalize(data[0][2]),terms);
+
+        } else
+        {
+            if (BOX2DPHYSICS)
+            {
+                for (var i=0; i<bodies.length; i++)
+                {
+                    var pos = bodies[i].GetPosition();
+                    data[0][i][0] = pos.x;
+                    data[0][i][1] = pos.y;
+                    // console.log(pos);
+                }
+                world.Step(1 / 60, 10, 10);
+                world.ClearForces();
+            } else
+            {
+                count++;
+                if (selected)
+                {
+                    var dx = cmx-data[0][selected-1][0];
+                    var dy = cmy-data[0][selected-1][1];
+                    var forces = evalForces3(data, selected-1, dx, dy);
+                    // RK4step(data, forces, 0.1);
+                    timeStep(data, forces, 0.1);
+                    // if (count<=10)
+                    //     console.log(forces);
+                } else
+                {
+                    var i = 0;
+                    for (i=0; i<data[0].length; i++)
+                        if (!data[0][i][2]) break;
+                    var forces = evalForces3(data, i, 0, 0);
+                    // RK4step(data, forces, 0.1);
+                    timeStep(data, forces, 0.1);
+                    // if (count<=10)
+                    //     console.log(forces);
+                }
             }
         }
     }
@@ -1155,6 +1277,8 @@ function updateLinkage() {
     parent = createParent(1,1,1);
     //document.write(JSON.stringify(parent));
     var e3 = createEquation(input.value);
+    equs = e3.genFuncs();
+    // console.log(equs);
     var e3e = e3.evalequ('x',createEquation("a+b"))
                             .evalequ('y',createEquation("c+d"));
     var cos = constructCosReporesentation(e3e);
@@ -1164,8 +1288,36 @@ function updateLinkage() {
     // console.log(cos);
     terms = cos;
     terms.splice(0,1);
-    mul = createKempeLinkage(1,1,terms);
-    data = mul;
+    fakecolor = {};
+    drawdata = createOptimizedKempeLinkage([4,8],[8,4],terms, fakecolor);
+    console.log(drawdata[2]);
+    // mul = createKempeLinkage(1,1,terms);
+    // data = mul;
+    physicsInit(equs);
+    toggleEditMode();
+    toggleEditMode();
+}
+
+function initlinkage() {
+    var e3 = createEquation("x^2-y+0.3");
+    equs = e3.genFuncs();
+    // console.log(equs);
+    var e3e = e3.evalequ('x',createEquation("a+b"))
+                            .evalequ('y',createEquation("c+d"));
+    var cos = constructCosReporesentation(e3e);
+    // output.value = strCos(cos);
+    // console.log(e3e);
+    // console.log(e3e.str());
+    // console.log(cos);
+    terms = cos;
+    terms.splice(0,1);
+    fakecolor = {};
+    drawdata = createOptimizedKempeLinkage([4,8],[8,4],terms, fakecolor);
+    console.log(drawdata[2]);
+    // mul = createKempeLinkage(1,1,terms);
+    // drawdata = createKempeLinkage(normalize([4,8]),normalize([8,4]),terms);
+    // data = mul;
+    physicsInit(equs);
     toggleEditMode();
     toggleEditMode();
 }
