@@ -114,7 +114,7 @@ function createKempeLinkage(a,b,terms){
     return [linkage_pts,linkage_edges];
 }
 
-function createOptimizedKempeLinkage(a, b, terms, fakecolor)
+function createOptimizedKempeLinkage(a, b, terms, fakecolor, anglea, angleb)
 {
     var pts = [[0,0,true], normalize(a).concat(false), normalize(b).concat(false),
         [1,0,true], [2,0,true], [4,0,true]];
@@ -124,6 +124,9 @@ function createOptimizedKempeLinkage(a, b, terms, fakecolor)
     var apos = [1], aneg, bpos = [2], bneg;
     var shift;
     var finalpts = [];
+    var origanga = Math.atan2(pts[1][1],pts[1][0]);
+    var origangb = Math.atan2(pts[2][1],pts[2][0]);
+
     for (var x=0; x<terms.length; x++)
     {
         if (terms[x][1] > maxa) maxa = terms[x][1];
@@ -402,7 +405,7 @@ function createOptimizedKempeLinkage(a, b, terms, fakecolor)
                 aindex = apos[terms[ii][1]-1];
             else
                 aindex = aneg[-terms[ii][1]-1];
-            var additor = createALinkage(pts[0], pts[aindex], pts[bindex], terms[ii][3], terms[ii][0]);
+            var additor = createALinkage(pts[0], pts[aindex], pts[bindex], terms[ii][3], terms[ii][0], terms[ii], anglea, angleb);
             additor[0].splice(0,3);
             shift = pts.length-3;
             var p1_pos = aindex;
@@ -971,14 +974,28 @@ function mulContraPara(p1,p2,l){
     return [np2,np1];
 }
 
-function createALinkage(root, p1, p2, angle, length)
+function createALinkage(root, p1, p2, angle, length, term, anga, angb)
 {
     // console.log(root, p1, p2, angle, length)
     var mp = [p1[0]+p2[0], p1[1]+p2[1]];
     var ang1 = Math.atan2(p1[1],p1[0]);
     var ang2 = Math.atan2(p2[1],p2[0]);
-    var angb = (ang1+ang2)/2;
-    mp = [Math.cos(angb), Math.sin(angb)];
+    ang1 = (ang1+Math.PI*2)%(Math.PI*2);
+    ang2 = (ang2+Math.PI*2)%(Math.PI*2);
+    var ang;
+    if (term === undefined)
+    {
+        ang = (ang1+ang2)/2;
+        // if (Math.abs(ang-ang1) > Math.PI/2)
+        // if (ang1 > ang2)
+        //     ang = ang+Math.PI;
+        
+    } else
+    {
+        ang = (term[1]*anga+term[2]*angb)/2;
+    }
+
+    mp = [Math.cos(ang), Math.sin(ang)];
 
     var pts = [
                 [root[0], root[1], false],

@@ -622,6 +622,7 @@ function conjugategrad(A, b)
         p[i] = r[i] = b[i];
         rval += r[i]*r[i];
     }
+    var steps = 1;
 
     while (true)
     {
@@ -652,7 +653,7 @@ function conjugategrad(A, b)
         //     console.log(rsize);
         //     console.log(x);
         // }
-        if (rval < 0.01) break;
+        if (rval < 0.01 || steps++ > 200) break;
 
     }
     return x;

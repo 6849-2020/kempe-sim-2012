@@ -466,7 +466,34 @@ function createEquation(s) {
 }
 
 function cosID(c) {
-    return c[0]+" "+c[1]+" "+(((c[2]%2)+2)%2);
+    c[2] = ((c[2]%2)+2)%2;
+    if (c[0] == 0)
+    {
+        if (c[1] == 0)
+            return c[0]+" "+c[1]+" "+((((c[2]%2)+2)%2)%1);
+        else if (c[1] < 0)
+        {
+            c[0] = -c[0];
+            c[1] = -c[1];
+            c[2] = -c[2];
+            c[2] = ((c[2]%2)+2)%2;
+            return c[0]+" "+c[1]+" "+((((c[2]%2)+2)%2)%1);
+        } else
+            return c[0]+" "+c[1]+" "+((((c[2]%2)+2)%2)%1);
+    } else
+    {
+        if (c[0] < 0)
+        {
+            c[0] = -c[0];
+            c[1] = -c[1];
+            c[2] = -c[2];
+            c[2] = ((c[2]%2)+2)%2;
+            return c[0]+" "+c[1]+" "+((((c[2]%2)+2)%2)%1);
+        } else
+            return c[0]+" "+c[1]+" "+((((c[2]%2)+2)%2)%1);
+    }
+
+    return c[0]+" "+c[1]+" "+((((c[2]%2)+2)%2)%1);
 }
 // key: 
 // 'a' = cos theta
@@ -487,6 +514,8 @@ function cosTerm(coeff, t, i, c, mult, l) {
         var id = cosID(c);
         var v = l[id];
         var newv = Math.pow(0.5,t.length-1)*coeff;
+        if (c[2] >= 1)
+            newv = -newv;
         if (v)
             l[id] = v+newv;
         else
@@ -606,7 +635,7 @@ function strCos(a)
                 else
                     s += a[i][3];
             }
-            s += "PI";
+            // s += "PI";
         }
         s += ")";
         total++;

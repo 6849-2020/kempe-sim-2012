@@ -38,6 +38,8 @@ var BOX2DPHYSICS = false;
 var USEPHYSICS = true;
 var fakingit = true;
 var fakecolor = {};
+var terms;
+var anglea, angleb;
 
 function kempeStart() {
     cvs = document.getElementById("graphics-canvas");
@@ -442,6 +444,11 @@ function draw() {
 
     ctx.fillStyle = 'blue';
     ctx.strokeStyle = 'blue';
+    if (fakingit)
+    {
+        ctx.fillStyle = '#8888ff';
+        ctx.strokeStyle = '#8888ff';
+    }
 
     
     for (var i=0; i<dd[1].length; i++)
@@ -454,7 +461,10 @@ function draw() {
         ctx.closePath();
         ctx.stroke();
         ctx.lineWidth = LINE_WIDTH;
-        ctx.strokeStyle = 'blue';
+        if (fakingit)
+            ctx.strokeStyle = '#8888ff';
+        else
+            ctx.strokeStyle = 'blue';
         ctx.beginPath();
         ctx.moveTo(cx+sx*dd[0][dd[1][i][0]][0],cy+sy*dd[0][dd[1][i][0]][1]);
         ctx.lineTo(cx+sx*dd[0][dd[1][i][1]][0],cy+sy*dd[0][dd[1][i][1]][1]);
@@ -526,6 +536,23 @@ function draw() {
 
     if (fakingit)
     {
+        for (var i=0; i<data[1].length; i++)
+        {
+            ctx.lineWidth = LINE_BORDER_WIDTH;
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.moveTo(cx+sx*data[0][data[1][i][0]][0],cy+sy*data[0][data[1][i][0]][1]);
+            ctx.lineTo(cx+sx*data[0][data[1][i][1]][0],cy+sy*data[0][data[1][i][1]][1]);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.lineWidth = LINE_WIDTH;
+            ctx.strokeStyle = 'blue';
+            ctx.beginPath();
+            ctx.moveTo(cx+sx*data[0][data[1][i][0]][0],cy+sy*data[0][data[1][i][0]][1]);
+            ctx.lineTo(cx+sx*data[0][data[1][i][1]][0],cy+sy*data[0][data[1][i][1]][1]);
+            ctx.closePath();
+            ctx.stroke();
+        }
         if (drawdata.length > 2)
             for (var i=0; i<drawdata[2].length; i++)
             {
@@ -542,7 +569,7 @@ function draw() {
                 ctx.fill();
                 ctx.stroke();
             }
-        for (var i=data[0].length-1; i>=0; i--)
+        for (var i=0; i<data[0].length; i++)
         {
 
             if (selected == i+1 || hilight == i+1 || line_start == i+1)
@@ -577,16 +604,16 @@ function draw() {
         }
     }
 
-    ctx.fillStyle = 'green';
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'black';
-    ctx.beginPath();
-    ctx.arc((cx+sx*data[0][3][0]), 
-            (cy+sy*data[0][3][1]), 
-            RADIUS/2, 0, Math.PI*2, true);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    // ctx.fillStyle = 'green';
+    // ctx.lineWidth = 1;
+    // ctx.strokeStyle = 'black';
+    // ctx.beginPath();
+    // ctx.arc((cx+sx*data[0][3][0]), 
+    //         (cy+sy*data[0][3][1]), 
+    //         RADIUS/2, 0, Math.PI*2, true);
+    // ctx.closePath();
+    // ctx.fill();
+    // ctx.stroke();
 
     ctx.fillStyle = 'brown';
     ctx.lineWidth = 1;
@@ -604,6 +631,19 @@ function toggleEditMode() {
     edit_mode = !edit_mode;
     if (!edit_mode)
         initProcessLinesAndPoints();
+}
+
+function figureAngles(a, b) {
+    var ang1 = Math.atan2(a[1],a[0]);
+    var ang2 = Math.atan2(b[1],b[0]);
+    var diff1 = (((ang1-anglea)%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+    if (diff1 < Math.PI)
+        anglea += diff1;
+    else anglea += diff1-Math.PI*2;
+    var diff2 = (((ang2-angleb)%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+    if (diff2 < Math.PI)
+        angleb += diff2;
+    else angleb += diff2-Math.PI*2;
 }
 
 var count = 0;
@@ -663,8 +703,9 @@ function update() {
                 // if (count<=10)
                 //     console.log(forces);
             }
+            figureAngles(data[0][1], data[0][2]);
             fakecolor = {};
-            drawdata = createOptimizedKempeLinkage(data[0][1], data[0][2],terms, fakecolor);
+            drawdata = createOptimizedKempeLinkage(data[0][1], data[0][2],terms, fakecolor, anglea, angleb);
             // drawdata = createKempeLinkage(normalize(data[0][1]),normalize(data[0][2]),terms);
 
         } else
@@ -1285,11 +1326,13 @@ function updateLinkage() {
     // output.value = strCos(cos);
     // console.log(e3e);
     // console.log(e3e.str());
-    // console.log(cos);
+    console.log(strCos(cos));
     terms = cos;
     terms.splice(0,1);
     fakecolor = {};
     drawdata = createOptimizedKempeLinkage([4,8],[8,4],terms, fakecolor);
+    anglea = Math.atan2(8,4);
+    angleb = Math.atan2(4,8);
     console.log(drawdata[2]);
     // mul = createKempeLinkage(1,1,terms);
     // data = mul;
@@ -1308,11 +1351,13 @@ function initlinkage() {
     // output.value = strCos(cos);
     // console.log(e3e);
     // console.log(e3e.str());
-    // console.log(cos);
+    console.log(strCos(cos));
     terms = cos;
     terms.splice(0,1);
     fakecolor = {};
     drawdata = createOptimizedKempeLinkage([4,8],[8,4],terms, fakecolor);
+    anglea = Math.atan2(8,4);
+    angleb = Math.atan2(4,8);
     console.log(drawdata[2]);
     // mul = createKempeLinkage(1,1,terms);
     // drawdata = createKempeLinkage(normalize([4,8]),normalize([8,4]),terms);
