@@ -12,14 +12,24 @@
 
 </head>
 
-<body onload="kempeStart();">
+<body onload="kempeStart(true);">
     <table border="0" width="100%">
+        <tr>
+            <td>
+                <textarea id="input" rows="3" cols="80">x^2-y+0.3</textarea>
+                <input type="submit" id="button" onclick="updateLinkage();" />
+            </td>
+            <td>
+                
+            </td>
+        </tr>
+
         <tr>
             <td>
                 <canvas id="graphics-canvas" style="border: none;" width="500" height="500" />
             </td>
         </tr>
-        <tr>
+        <!-- <tr>
             <td>
                 <input type="checkbox" id="checkboxeditMode" onchange="updateEditMode();" />Edit Mode
             </td>
@@ -33,7 +43,7 @@
             <td>
                 
             </td>
-        </tr>
+        </tr> -->
     </table>
     
 

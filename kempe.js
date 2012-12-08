@@ -36,15 +36,19 @@ var bodies;
 var mousejoint;
 var BOX2DPHYSICS = false;
 var USEPHYSICS = true;
-var fakingit = true;
+var fakingit;
 var fakecolor = {};
 var terms;
 var anglea, angleb;
+var displayhelp  = true;
 
-function kempeStart() {
+
+function kempeStart(kempesim) {
+    fakingit = kempesim;
     cvs = document.getElementById("graphics-canvas");
     errordisplay = document.getElementById("error-display");
     checkboxeditMode = document.getElementById("checkboxeditMode");
+    checkboxphysicsMode = document.getElementById("checkboxphysics");
     ctx = cvs.getContext("2d");
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0,0,500,500);
@@ -77,7 +81,8 @@ function kempeStart() {
 
     init();
 
-    initlinkage();
+    if (fakingit)
+        initlinkage();
     tick();
 }
 
@@ -85,12 +90,19 @@ var last_doc_width;
 var last_doc_length;
 function recalcViewDimentions()
 {
-    cvs.width = window.innerWidth;
-    cvs.height = window.innerHeight ;
-    VIEW_WIDTH = cvs.width;
-    VIEW_HEIGHT = cvs.height;
-    last_doc_width = window.innerWidth;
-    last_doc_length = window.innerHeight;
+    var widthminus = -19
+    var heightminus = -80;
+    if (fakingit)
+    {
+        widthminus = -19;
+        heightminus = -90;
+    }
+    cvs.width = window.innerWidth+widthminus;
+    cvs.height = window.innerHeight+heightminus;
+    VIEW_WIDTH = cvs.width+widthminus;
+    VIEW_HEIGHT = cvs.height+heightminus;
+    last_doc_width = window.innerWidth+widthminus;
+    last_doc_length = window.innerHeight+heightminus;
 }
 
 function createPhysicsWorld() {
@@ -399,31 +411,35 @@ function init() {
     line_end = [0,0];
 
     // data = createAdditor(1, 2, 2, 1);
-    parent = createParent(1,1,1);
+    // parent = createParent(1,1,1);
     //document.write(JSON.stringify(parent));
-    terms = [
-                [5.3,5,0,Math.PI/2]
-                ,   [5.3,3,3,Math.PI/2]
-                ,   [5.3,4,4,Math.PI/2]
-                   , [6,0,-2,Math.PI/2]
-                // , [5,1,0,0]
-                // , [5,0,0,Math.PI/1.2]
-            ];
-    mul = createKempeLinkage(1,1,terms);
-    data = data1;
+    // terms = [
+    //             [5.3,5,0,Math.PI/2]
+    //             ,   [5.3,3,3,Math.PI/2]
+    //             ,   [5.3,4,4,Math.PI/2]
+    //                , [6,0,-2,Math.PI/2]
+    //             // , [5,1,0,0]
+    //             // , [5,0,0,Math.PI/1.2]
+    //         ];
+    // mul = createKempeLinkage(1,1,terms);
+    // data = data1;
 
-    var d = createOptimizedKempeLinkage([4,8],[8,4],terms, fakecolor);
-    data = d;
+    // var d = createOptimizedKempeLinkage([4,8],[8,4],terms, fakecolor);
+    // data = d;
 
-    data = createPLinkage(0,0,10);
+    // data = createPLinkage(0,0,10);
 
-    data = data3;
+    // data = data3;
     // data[0].push([0,0]);
     // data[0].push([8,4]);
     // data[0].push([4,8]);
     // data[0].push([12,12]);
     // data[1].push([0, data[0].length-3]);
     // data = data2;
+    if (fakingit)
+        data = data2;
+    else
+        data = data1;
 
     initProcessLinesAndPoints();
 }
@@ -518,7 +534,7 @@ function draw() {
                 {
                     var cccc = fakecolor[""+i];
                     if (cccc == undefined)
-                        ctx.fillStyle = 'blue';
+                        ctx.fillStyle = '#8888ff';//'blue';
                     else ctx.fillStyle = cccc;
                 }
                 else
@@ -536,6 +552,34 @@ function draw() {
 
     if (fakingit)
     {
+        if (drawdata.length > 2)
+            for (var i=0; i<drawdata[2].length; i++)
+            {
+                // console.log(drawdata[2][i]);
+                ctx.fillStyle = fakecolor[""+drawdata[2][i]];
+
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'black';
+                ctx.beginPath();
+                ctx.arc((cx+sx*dd[0][drawdata[2][i]][0]), 
+                        (cy+sy*dd[0][drawdata[2][i]][1]), 
+                        RADIUS/2, 0, Math.PI*2, true);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+
+        ctx.fillStyle = 'brown';
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'black';
+        ctx.beginPath();
+        ctx.arc((cx+sx*dd[0][dd[0].length-2][0]), 
+                (cy+sy*dd[0][dd[0].length-2][1]), 
+                RADIUS/2, 0, Math.PI*2, true);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
         for (var i=0; i<data[1].length; i++)
         {
             ctx.lineWidth = LINE_BORDER_WIDTH;
@@ -553,22 +597,7 @@ function draw() {
             ctx.closePath();
             ctx.stroke();
         }
-        if (drawdata.length > 2)
-            for (var i=0; i<drawdata[2].length; i++)
-            {
-                // console.log(drawdata[2][i]);
-                ctx.fillStyle = fakecolor[""+drawdata[2][i]];
 
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = 'black';
-                ctx.beginPath();
-                ctx.arc((cx+sx*dd[0][drawdata[2][i]][0]), 
-                        (cy+sy*dd[0][drawdata[2][i]][1]), 
-                        RADIUS/2, 0, Math.PI*2, true);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-            }
         for (var i=0; i<data[0].length; i++)
         {
 
@@ -604,6 +633,33 @@ function draw() {
         }
     }
 
+    if (edit_mode && displayhelp)
+    {
+        ctx.lineWidth=1;
+        ctx.fillStyle="#000000";
+        ctx.lineStyle="#ffff00";
+        ctx.font="18px sans-serif";
+            var helptext = "Edit Mode Controls:\n" +
+                            "Ctrl + click - add free point\n" +
+                            "Ctrl+Shift + click - add fixed point\n" +
+                            "Alt + click - remove point\n" +
+                            "Shift + drag - add line \n" +
+                            "Capslock - toggle edit mode\n" +
+                            "Tab - toggle physics mode \n" +
+                            "h - toggle this help text"
+        var offset = 20;
+        ctx.fillText("Edit Mode Controls:", 20, 20);
+        ctx.fillText("drag - move point, no physics", 20, 20+offset);
+        ctx.fillText("Ctrl + click - add free point", 20, 20+offset*2);
+        ctx.fillText("Ctrl+Shift + click - add fixed point", 20, 20+offset*3);
+        ctx.fillText("Alt + click - remove point", 20, 20+offset*4);
+        ctx.fillText("Shift + drag - add line", 20, 20+offset*5);
+        ctx.fillText("Capslock - toggle edit mode", 20, 20+offset*6);
+        ctx.fillText("Tab - toggle physics mode", 20, 20+offset*7);
+        ctx.fillText("h - toggle this help text", 20, 20+offset*8);
+
+    }
+
     // ctx.fillStyle = 'green';
     // ctx.lineWidth = 1;
     // ctx.strokeStyle = 'black';
@@ -615,22 +671,22 @@ function draw() {
     // ctx.fill();
     // ctx.stroke();
 
-    ctx.fillStyle = 'brown';
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'black';
-    ctx.beginPath();
-    ctx.arc((cx+sx*dd[0][dd[0].length-2][0]), 
-            (cy+sy*dd[0][dd[0].length-2][1]), 
-            RADIUS/2, 0, Math.PI*2, true);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    
 }
 
 function toggleEditMode() {
     edit_mode = !edit_mode;
     if (!edit_mode)
         initProcessLinesAndPoints();
+}
+
+function togglePhysicsMode() {
+    var isedit = edit_mode;
+    if (!isedit)
+        toggleEditMode();
+    BOX2DPHYSICS = !BOX2DPHYSICS;
+    if (!isedit)
+        toggleEditMode();
 }
 
 function figureAngles(a, b) {
@@ -1163,10 +1219,11 @@ function handleKeyDown(event) {
     currentKeysDown[event.keyCode] = true;
     handleKeyPress(event);
     switch(event.keyCode){
-        case 37:
-        case 38:
-        case 39:
-        case 40:
+        case 9:
+        // case 37:
+        // case 38:
+        // case 39:
+        // case 40:
             event.preventDefault();
             break;
     }
@@ -1179,18 +1236,27 @@ function handleKeyUp(event) {
         {
             line_start = false;
         } break;
-        case 37:
-        case 38:
-        case 39:
-        case 40:
+        case 9:
+        // case 37:
+        // case 38:
+        // case 39:
+        // case 40:
             event.preventDefault();
             break;
     }
 }
 
 function handleKeyPress(event) {
+    // tab
+    if (event.keyCode == 9)
+    {
+        if (fakingit)
+            return;
+        togglePhysicsMode();
+        checkboxphysicsMode.checked = BOX2DPHYSICS;
+    }
     // shift
-    if (event.keyCode == 16) {
+    else if (event.keyCode == 16) {
         
     }
 
@@ -1201,6 +1267,8 @@ function handleKeyPress(event) {
 
     // capslock
     else if (event.keyCode == 20) {
+        if (fakingit)
+            return;
         // edit_mode = !edit_mode;
         toggleEditMode();
         checkboxeditMode.checked = edit_mode;
@@ -1219,14 +1287,14 @@ function handleKeyPress(event) {
 
     // up
     else if (event.keyCode == 38) {
-        sx /= 0.9;
-        sy /= 0.9;
+        // sx /= 0.9;
+        // sy /= 0.9;
     }
 
     // down
     else if (event.keyCode == 40) {
-        sx *= 0.9;
-        sy *= 0.9;
+        // sx *= 0.9;
+        // sy *= 0.9;
     }
 
     else if (event.keyCode == 'A'.charCodeAt()) {
@@ -1241,6 +1309,10 @@ function handleKeyPress(event) {
         sy *= 0.9;
         cx = VIEW_WIDTH/2 + (cx-VIEW_WIDTH/2)*0.9
         cy = VIEW_HEIGHT/2 + (cy-VIEW_HEIGHT/2)*0.9
+    }
+
+    else if (event.keyCode == 'H'.charCodeAt()) {
+        displayhelp = !displayhelp;
     }
 }
 
@@ -1310,6 +1382,17 @@ function updateEditMode() {
     edit_mode = checkboxeditMode.checked;
     if (!edit_mode)
         initProcessLinesAndPoints();
+}
+
+var checkboxphysicsMode;
+function updatePhysicsMode() {
+    if (!checkboxphysicsMode) checkboxphysicsMode = document.getElementById("checkboxphysics");
+    var isedit = edit_mode;
+    if (!isedit)
+        toggleEditMode();
+    BOX2DPHYSICS = checkboxphysicsMode.checked;
+    if (!isedit)
+        toggleEditMode();
 }
 
 var inputtextbox;

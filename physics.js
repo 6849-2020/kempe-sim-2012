@@ -226,8 +226,8 @@ function evalForces3(data, fi, fx, fy) {
     //jd.push([0,0,0,0,p[3][4],p[3][3]]);
     
     //circle
-    j.push([0,0,0,0,2*p[3][0], 2*p[3][1]]);
-    jd.push([0,0,0,0,2*p[3][3], 2*p[3][4]]);
+    // j.push([0,0,0,0,2*p[3][0], 2*p[3][1]]);
+    // jd.push([0,0,0,0,2*p[3][3], 2*p[3][4]]);
     
 
 
@@ -244,7 +244,7 @@ function evalForces3(data, fi, fx, fy) {
     // curve constraint
     //c.push(p[3][0] * p[3][1] - 1);
 	 //circle
-    c.push(p[3][0]*p[3][0] + p[3][1]*p[3][1] - 1);
+    // c.push(p[3][0]*p[3][0] + p[3][1]*p[3][1] - 1);
 
 
 
@@ -263,12 +263,12 @@ function evalForces3(data, fi, fx, fy) {
     // curve constraint
     //cdot.push(p[3][1]*p[3][3] + p[3][0]*p[3][4]);
     //circle
-    cdot.push(2*p[3][0]*p[3][3] + 2*p[3][1]*p[3][4]);
+    // cdot.push(2*p[3][0]*p[3][3] + 2*p[3][1]*p[3][4]);
 
     var w = 1;
 
     var num = [];
-    for (var i=0; i<(e.length+1); i++)
+    for (var i=0; i<(e.length); i++)
     {
         var val = 0;
         for (var ii=0; ii<m.length; ii++)
