@@ -18,3 +18,8 @@ This was a final project for 6.849 Fall 2012 containing a physics simulation for
 * **colors.js**, **colors.min.js** - [Colors JS](https://github.com/mbjordan/Colors) library for ease of picking colors.
 * **numeric-1.2.3.js**, **numeric-1.2.3.min.js** - [Numeric Javascript](http://numericjs.com/) library for matrix functions.
 * **webgl-utils.js** - Google webgl utils for regularly updating animation frames.
+
+
+### License ###
+
+This content is released under the[ MIT License](https://en.wikipedia.org/wiki/MIT_License).
