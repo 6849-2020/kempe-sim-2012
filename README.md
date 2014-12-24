@@ -4,7 +4,7 @@ This was a final project for [6.849 Fall 2012](http://courses.csail.mit.edu/6.84
 
 ### Quick Overview of Files ###
 
-* **cas.js** - Computer Algebra System implementation for converting algebraic equations into trigonometic ones. Used to convert #x#,#y# equations into #a#,#b# equations, where a and b are angles forming the drawing rhombus.
+* **cas.js** - Computer Algebra System implementation for converting algebraic equations into trigonometic ones. Used to convert *x*,*y* equations into *a*,*b* equations, where *a* and *b* are angles forming the drawing rhombus.
 * **casdemo.html** - Simple display for testing various algebraic expression calculations.
 * **kempe-linkage.js** - Code for generating kempe linkage constructions.
 * **kempe.js** - Main application display/GUI code.
