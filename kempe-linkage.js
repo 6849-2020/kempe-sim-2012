@@ -19,7 +19,7 @@
 
  RETURNS: List of linkages for each cosine term 
  */
-function createKempeLinkage(a,b,terms){
+function createKempeLinkage(a,b,terms,anga,angb){
     var final_term_links = [];
     //Parent parallelogram p [[p_o,p_a,p_b,p_f],[o_a,o_b,a_f,b_f]
     var parent = createParent(a,b,1);
@@ -27,7 +27,7 @@ function createKempeLinkage(a,b,terms){
     var linkage_edges = [] //parent[1];//.concat([1,3,1][2,3,1]);
     shift = 0;
     for (var i = 0; i < terms.length; i++){
-        var linkage_term = createLinkage(linkage_pts,terms[i]);
+        var linkage_term = createLinkage(linkage_pts,terms[i],anga,angb);
         // linkage_term[0].splice(0,4);
         linkage_pts = linkage_pts.concat(linkage_term[0]);
         //alert(JSON.stringify(linkage_term));
@@ -756,7 +756,7 @@ INPUT: Angles a and b, Parent parallelogram p [[p_o,p_a,p_b,p_f],[o_a,o_b,a_f,b_
 RETURNS: list representation of the linkage[[p_1,p_2...],[e_1,e_2...]] where p_i is a point in format [x,y,bool], and e_i is of the form [p_s,p_e,length] and the indices of
 p1 and p2 of the multiplicators.
 */
-function createLinkage(parent, params){
+function createLinkage(parent, params, anga, angb){
   // console.log(parent);
   var linkage = [];
   //Multiplicator terms, returns additional points,edges to be attached to parent
@@ -824,7 +824,7 @@ function createLinkage(parent, params){
   var mul_one_last = mul_one_pts.length == 0 ? normalize(parent[1]) : mul_one_pts[mul_one_pts.length-1];
   var mul_two_last = mul_two_pts.length == 0 ? normalize(parent[2]) : mul_two_pts[mul_two_pts.length-1];
 
-  var additor = createALinkage(parent[0], mul_one_last, mul_two_last, params[3], params[0]);
+  var additor = createALinkage(parent[0], mul_one_last, mul_two_last, params[3], params[0], params, anga, angb);
   //Combine mul pts, edges:
   var final_pts = mul_one_pts.concat(mul_two_pts);
   var final_edges = mul_one_edges.concat(mul_two_edges);

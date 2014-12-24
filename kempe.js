@@ -37,6 +37,7 @@ var mousejoint;
 var BOX2DPHYSICS = false;
 var USEPHYSICS = true;
 var fakingit;
+var accuraterender = true;
 var fakecolor = {};
 var terms;
 var anglea, angleb;
@@ -633,30 +634,52 @@ function draw() {
         }
     }
 
-    if (edit_mode && displayhelp)
+    if (displayhelp)
     {
         ctx.lineWidth=1;
         ctx.fillStyle="#000000";
         ctx.lineStyle="#ffff00";
         ctx.font="18px sans-serif";
-            var helptext = "Edit Mode Controls:\n" +
-                            "Ctrl + click - add free point\n" +
-                            "Ctrl+Shift + click - add fixed point\n" +
-                            "Alt + click - remove point\n" +
-                            "Shift + drag - add line \n" +
-                            "Capslock - toggle edit mode\n" +
-                            "Tab - toggle physics mode \n" +
-                            "h - toggle this help text"
+        var helptext = "Normal Controls:\n" +
+                        "  Drag points to move them\n" +
+                        "  Drag screen to move view\n" +
+                        "  Scrollwheel to zoom in/out\n" +
+                        "  H - toggle this help text"
+        var extra_helptext = "\n\n" + 
+                        "Edit Mode Controls:\n" +
+                        "  Ctrl + click - add free point\n" +
+                        "  Ctrl+Shift + click - add fixed point\n" +
+                        "  Alt + click - remove point\n" +
+                        "  Shift + drag - add line \n" +
+                        "  Capslock - toggle edit mode\n" +
+                        "  Tab - toggle physics mode"
+
+        var kempe_helptext = "\n"+
+                        "  R - Switch linkage construction algorithm.\n" +
+                        "      Optimized linkage has less nodes for faster render,\n"+
+                        "      but might not result in a proper linkage.\n\n" + 
+                        "Tips:\n" +
+                        "  Pick functions which can be visualized within\n" +
+                        "    the disc of radius 2 centered on the origin\n" +
+                        "  Do not pick functions which cross the origin\n" +
+                        "  Simple functions might not work correctly\n" +
+                        "  Only the unbraced kempe linkage is displayed, this means that\n" +
+                        "    the linkage displayed might have more freedoms of movement\n" +
+                        "    if realized physically - this is only a visualization"
+        if (!fakingit) {
+            helptext = helptext + extra_helptext;
+        } else {
+            helptext = helptext + kempe_helptext;
+            if (accuraterender)
+                ctx.fillText("Accurate Linkage", 20, 20);
+            else
+                ctx.fillText("Optimized Linkage", 20, 20);
+        }
         var offset = 20;
-        ctx.fillText("Edit Mode Controls:", 20, 20);
-        ctx.fillText("drag - move point, no physics", 20, 20+offset);
-        ctx.fillText("Ctrl + click - add free point", 20, 20+offset*2);
-        ctx.fillText("Ctrl+Shift + click - add fixed point", 20, 20+offset*3);
-        ctx.fillText("Alt + click - remove point", 20, 20+offset*4);
-        ctx.fillText("Shift + drag - add line", 20, 20+offset*5);
-        ctx.fillText("Capslock - toggle edit mode", 20, 20+offset*6);
-        ctx.fillText("Tab - toggle physics mode", 20, 20+offset*7);
-        ctx.fillText("h - toggle this help text", 20, 20+offset*8);
+        text = helptext.split("\n");
+        for (var i=0; i<text.length; i++) {
+            ctx.fillText(text[i], 20, 80 + i*offset);
+        }
 
     }
 
@@ -761,8 +784,11 @@ function update() {
             }
             figureAngles(data[0][1], data[0][2]);
             fakecolor = {};
-            drawdata = createOptimizedKempeLinkage(data[0][1], data[0][2],terms, fakecolor, anglea, angleb);
-            // drawdata = createKempeLinkage(normalize(data[0][1]),normalize(data[0][2]),terms);
+
+            if (!accuraterender)
+                drawdata = createOptimizedKempeLinkage(data[0][1], data[0][2],terms, fakecolor, anglea, angleb);
+            else
+                drawdata = createKempeLinkage(normalize(data[0][1]),normalize(data[0][2]),terms, anglea, angleb);
 
         } else
         {
@@ -1313,6 +1339,10 @@ function handleKeyPress(event) {
 
     else if (event.keyCode == 'H'.charCodeAt()) {
         displayhelp = !displayhelp;
+    }
+
+    else if (event.keyCode == 'R'.charCodeAt()) {
+        accuraterender = !accuraterender;
     }
 }
 
