@@ -42,7 +42,7 @@ var fakecolor = {};
 var terms;
 var anglea, angleb;
 var displayhelp  = true;
-
+var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
 function kempeStart(kempesim) {
     fakingit = kempesim;
@@ -637,9 +637,13 @@ function draw() {
     if (displayhelp)
     {
         ctx.lineWidth=1;
-        ctx.fillStyle="#000000";
         ctx.lineStyle="#ffff00";
         ctx.font="18px sans-serif";
+        if (!is_chrome) {
+            ctx.fillStyle="#AA0000";
+            ctx.fillText("  WARNING: Use Chrome for best results", 20, 40);
+        }
+        ctx.fillStyle="#000000";
         var helptext = "Normal Controls:\n" +
                         "  Drag points to move them\n" +
                         "  Drag screen to move view\n" +
@@ -678,7 +682,7 @@ function draw() {
         var offset = 20;
         text = helptext.split("\n");
         for (var i=0; i<text.length; i++) {
-            ctx.fillText(text[i], 20, 80 + i*offset);
+            ctx.fillText(text[i], 20, 60 + i*offset);
         }
 
     }
